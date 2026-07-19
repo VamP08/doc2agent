@@ -6,3 +6,7 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+
+/docs/
+
+/CLAUDE.md
