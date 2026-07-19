@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Doc2Agent — API docs in, working agent out</title>
+<style>
+  :root {
+    --bg: #101210; --panel: #161915; --panel2: #1c201b; --border: #2e332c;
+    --text: #e7e4da; --muted: #9a978b; --accent: #e0a03c; --accent2: #a8bf6a;
+    --ok: #8fce6a; --err: #e4735f; --get: #7fb4d9; --post: #8fce6a;
+    --put: #e0a03c; --del: #e4735f; --patch: #c9a3d9;
+    --mono: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg); color: var(--text); min-height: 100vh;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  header { padding: 26px 32px 10px; border-bottom: 1px solid var(--border); }
+  header h1 { font-size: 1.25rem; font-family: var(--mono); letter-spacing: 0.02em; }
+  header h1::before { content: "▚ "; color: var(--accent); }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--muted); margin-top: 6px; font-size: 0.9rem; }
+  .wrap { display: grid; grid-template-columns: 380px 1fr; gap: 16px; padding: 18px 32px 32px; }
+  @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 4px; padding: 18px; display: flex; flex-direction: column;
+  }
+  label { font-size: 0.72rem; color: var(--muted); display: block; margin: 10px 0 4px;
+          text-transform: uppercase; letter-spacing: 0.07em; }
+  input, textarea {
+    width: 100%; background: var(--panel2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 3px; padding: 10px 12px;
+    font-size: 0.9rem; outline: none; font-family: var(--mono);
+  }
+  input:focus, textarea:focus { border-color: var(--accent); }
+  button {
+    background: var(--accent); color: #171200; font-weight: 700; border: none;
+    border-radius: 3px; padding: 10px 16px; cursor: pointer; font-size: 0.88rem;
+    margin-top: 14px; font-family: var(--mono);
+  }
+  button:hover:not(:disabled) { filter: brightness(1.1); }
+  button:disabled { opacity: 0.5; cursor: wait; }
+  details { margin-top: 8px; }
+  summary { color: var(--muted); font-size: 0.8rem; cursor: pointer; }
+  .status { margin-top: 12px; font-size: 0.84rem; color: var(--muted); min-height: 1.2em; }
+  .status.err { color: var(--err); }
+  .status.ok { color: var(--ok); }
+  #endpoints { margin-top: 14px; overflow-y: auto; max-height: 46vh; }
+  .ep { display: flex; gap: 8px; align-items: baseline; padding: 7px 8px;
+        border-bottom: 1px solid var(--border); font-size: 0.82rem; }
+  .ep:last-child { border-bottom: none; }
+  .method { font-weight: 700; font-size: 0.7rem; width: 46px; flex-shrink: 0; }
+  .m-GET { color: var(--get); } .m-POST { color: var(--post); }
+  .m-PUT { color: var(--put); } .m-DELETE { color: var(--del); } .m-PATCH { color: var(--patch); }
+  .ep .path { font-family: Consolas, monospace; word-break: break-all; }
+  .ep .desc { color: var(--muted); font-size: 0.76rem; }
+  /* chat */
+  #chat { min-height: 70vh; }
+  #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+              gap: 12px; padding: 6px 2px; }
+  .msg { max-width: 85%; padding: 10px 14px; border-radius: 4px;
+         font-size: 0.92rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+  .user { align-self: flex-end; background: #26304a; }
+  .bot  { align-self: flex-start; background: var(--panel2); border: 1px solid var(--border); }
+  .trace { align-self: flex-start; width: 100%; font-family: var(--mono);
+           font-size: 0.76rem; color: var(--muted); border-left: 3px solid var(--accent);
+           padding: 4px 10px; }
+  .trace .t-ok { color: var(--ok); } .trace .t-err { color: var(--err); }
+  #composer { display: flex; gap: 10px; margin-top: 14px; }
+  #composer input { flex: 1; }
+  #composer button { margin-top: 0; }
+  .empty { color: var(--muted); font-size: 0.88rem; text-align: center; margin: auto; }
+  .badge { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 20px;
+           border: 1px solid var(--border); color: var(--accent); margin-left: 8px; }
+  .navlink { font-size: 0.78rem; font-weight: 400; color: var(--accent2); text-decoration: none;
+             margin-left: 14px; vertical-align: middle; }
+  .demo-btn { background: none; border: 1px dashed var(--accent2); color: var(--accent2);
+              font-weight: 500; margin-top: 8px; padding: 8px 12px; font-size: 0.82rem; width: 100%; }
+  .mcp-btn { background: none; border: 1px solid var(--accent); color: var(--accent);
+             font-weight: 500; margin-top: 10px; padding: 8px 12px; font-size: 0.82rem;
+             width: 100%; display: none; }
+  .approval { align-self: flex-start; width: 100%; border: 1px solid var(--accent);
+              border-radius: 4px; padding: 10px 14px; font-size: 0.85rem; background: rgba(224,160,60,0.07); }
+  .approval .head { color: var(--accent); font-weight: 600; font-size: 0.78rem; margin-bottom: 6px; }
+  .approval code { font-family: Consolas, monospace; font-size: 0.78rem; word-break: break-all; }
+  .approval .btns { margin-top: 8px; display: flex; gap: 8px; }
+  .approval button { margin-top: 0; padding: 6px 14px; font-size: 0.8rem; }
+  .approval .deny { background: none; border: 1px solid var(--err); color: var(--err); }
+  .approval .resolved { color: var(--muted); font-size: 0.78rem; margin-top: 6px; }
+  .routing { align-self: flex-start; color: var(--muted); font-size: 0.76rem; font-style: italic; }
+  .toggle { display: flex; align-items: center; gap: 6px; color: var(--muted);
+            font-size: 0.76rem; margin-top: 8px; user-select: none; }
+  .toggle input { width: auto; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Doc<span>2</span>Agent <a class="navlink" href="/monitor" target="_blank">Live Monitor ↗</a>
+      <a class="navlink" href="/demo/docs" target="_blank">Demo API docs ↗</a></h1>
+  <p>Paste any REST API's documentation or OpenAPI spec URL — get a working AI agent that calls it for real.</p>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <label for="url">API docs / OpenAPI spec URL</label>
+    <input id="url" placeholder="https://petstore3.swagger.io/api/v3/openapi.json" />
+    <button class="demo-btn" id="use-demo">⚡ Use the built-in AeroTrack demo API — then watch it live on the Monitor</button>
+    <details>
+      <summary>Optional: API key for authenticated APIs</summary>
+      <label for="apikey">API key</label>
+      <input id="apikey" placeholder="sk-..." />
+      <label for="authheader">Auth header name</label>
+      <input id="authheader" value="Authorization" />
+    </details>
+    <button id="generate">Generate Agent</button>
+    <div id="ingest-status" class="status"></div>
+    <button class="mcp-btn" id="export-mcp">⬇ Export as MCP server (use this agent in Claude Desktop / Cursor)</button>
+    <div id="endpoints"></div>
+  </div>
+
+  <div class="card" id="chat">
+    <div id="messages"><div class="empty">Generate an agent, then ask it anything the API can answer.</div></div>
+    <div id="composer">
+      <input id="prompt" placeholder="e.g. Find all available pets and summarise them" disabled />
+      <button id="send" disabled>Send</button>
+    </div>
+    <label class="toggle"><input type="checkbox" id="autoapprove" />
+      auto-approve write operations (POST/PATCH/DELETE) — otherwise the agent pauses and asks you</label>
+  </div>
+</div>
+
+<script>
+let sessionId = null;
+const $ = (id) => document.getElementById(id);
+
+function addMsg(cls, text) {
+  const div = document.createElement("div");
+  div.className = "msg " + cls;
+  div.textContent = text;
+  $("messages").appendChild(div);
+  $("messages").scrollTop = $("messages").scrollHeight;
+  return div;
+}
+
+function addTrace(traces) {
+  if (!traces || !traces.length) return;
+  const div = document.createElement("div");
+  div.className = "trace";
+  div.innerHTML = traces.map(t =>
+    `<div><span class="${t.ok ? "t-ok" : "t-err"}">${t.ok ? "✓" : "✗"}</span> ` +
+    `${t.method} ${escapeHtml(t.url)} <span>${escapeHtml(t.summary || "")}</span></div>`
+  ).join("");
+  $("messages").appendChild(div);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+$("use-demo").onclick = () => {
+  $("url").value = location.origin + "/demo/openapi.json";
+  $("generate").click();
+};
+
+$("generate").onclick = async () => {
+  const url = $("url").value.trim();
+  if (!url) return;
+  $("generate").disabled = true;
+  const st = $("ingest-status");
+  st.className = "status"; st.textContent = "Fetching docs and generating tools…";
+  $("endpoints").innerHTML = "";
+  try {
+    const resp = await fetch("/api/ingest", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        url,
+        api_key: $("apikey").value.trim() || null,
+        auth_header: $("authheader").value.trim() || "Authorization",
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || resp.statusText);
+    sessionId = data.session_id;
+    st.className = "status ok";
+    st.innerHTML = `✓ ${data.endpoints.length} endpoints → tools ` +
+      `<span class="badge">${data.source === "openapi" ? "parsed OpenAPI spec" : "LLM-extracted from HTML"}</span>` +
+      `<div>base: ${escapeHtml(data.base_url)}</div>`;
+    for (const ep of data.endpoints) {
+      const row = document.createElement("div");
+      row.className = "ep";
+      row.innerHTML = `<span class="method m-${ep.method}">${ep.method}</span>` +
+        `<span><span class="path">${escapeHtml(ep.path)}</span>` +
+        `<div class="desc">${escapeHtml(ep.description || "")}</div></span>`;
+      $("endpoints").appendChild(row);
+    }
+    $("prompt").disabled = false; $("send").disabled = false;
+    $("export-mcp").style.display = "block";
+    $("messages").innerHTML = "";
+    addMsg("bot", "Agent ready. Ask me anything this API can answer — I'll call the real endpoints and show you every request I make. Write operations will pause for your approval.");
+  } catch (e) {
+    st.className = "status err"; st.textContent = "✗ " + e.message;
+  } finally {
+    $("generate").disabled = false;
+  }
+};
+
+$("export-mcp").onclick = () => {
+  if (sessionId) window.location.href = `/api/sessions/${sessionId}/mcp`;
+};
+
+function addApprovalCard(ev) {
+  const div = document.createElement("div");
+  div.className = "approval";
+  div.innerHTML =
+    `<div class="head">⚠ APPROVAL REQUIRED — the agent wants to run a write operation</div>` +
+    `<code>${escapeHtml(ev.method)} ${escapeHtml(ev.path)}</code>` +
+    `<code>${escapeHtml(JSON.stringify(ev.args))}</code>` +
+    `<div class="btns"><button class="ok-btn">Approve</button><button class="deny">Deny</button></div>`;
+  const decide = async (approve) => {
+    div.querySelector(".btns").innerHTML =
+      `<span class="resolved">${approve ? "✓ approved — executing…" : "✗ denied"}</span>`;
+    await fetch(`/api/approvals/${ev.approval_id}`, {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({approve}),
+    });
+  };
+  div.querySelector(".ok-btn").onclick = () => decide(true);
+  div.querySelector(".deny").onclick = () => decide(false);
+  $("messages").appendChild(div);
+  $("messages").scrollTop = $("messages").scrollHeight;
+}
+
+function handleEvent(ev, state) {
+  if (ev.type === "routing") {
+    const div = document.createElement("div");
+    div.className = "routing";
+    div.textContent = `→ large API: routed to categories [${ev.categories.join(", ")}], ${ev.tool_count} tools active`;
+    $("messages").appendChild(div);
+  } else if (ev.type === "tool_call") {
+    state.thinking.textContent = `…calling ${ev.method} ${ev.path}…`;
+  } else if (ev.type === "approval_required") {
+    state.thinking.textContent = "…waiting for your approval…";
+    addApprovalCard(ev);
+  } else if (ev.type === "tool_result") {
+    addTrace([ev.trace]);
+    state.thinking.textContent = "…thinking…";
+    $("messages").appendChild(state.thinking);
+  } else if (ev.type === "reply") {
+    state.thinking.remove();
+    addMsg("bot", ev.text);
+    state.done = true;
+  } else if (ev.type === "error") {
+    state.thinking.textContent = "✗ " + ev.detail;
+    state.done = true;
+  }
+  $("messages").scrollTop = $("messages").scrollHeight;
+}
+
+async function send() {
+  const text = $("prompt").value.trim();
+  if (!text || !sessionId) return;
+  $("prompt").value = ""; $("send").disabled = true; $("prompt").disabled = true;
+  addMsg("user", text);
+  const state = { thinking: addMsg("bot", "…thinking…"), done: false };
+  try {
+    const resp = await fetch("/api/chat/stream", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        session_id: sessionId, message: text,
+        auto_approve: $("autoapprove").checked,
+      }),
+    });
+    if (!resp.ok) throw new Error((await resp.json()).detail || resp.statusText);
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, {stream: true});
+      const chunks = buffer.split("\n\n");
+      buffer = chunks.pop();
+      for (const chunk of chunks) {
+        const line = chunk.split("\n").find(l => l.startsWith("data: "));
+        if (line) handleEvent(JSON.parse(line.slice(6)), state);
+      }
+    }
+    if (!state.done) state.thinking.remove();
+  } catch (e) {
+    state.thinking.textContent = "✗ " + e.message;
+  } finally {
+    $("send").disabled = false; $("prompt").disabled = false; $("prompt").focus();
+  }
+}
+$("send").onclick = send;
+$("prompt").addEventListener("keydown", e => { if (e.key === "Enter") send(); });
+</script>
+</body>
+</html>

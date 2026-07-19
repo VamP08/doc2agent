@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AeroTrack — Live Operations Monitor</title>
+<style>
+  :root {
+    --bg: #101210; --panel: #161915; --panel2: #1c201b; --border: #2e332c;
+    --text: #e7e4da; --muted: #9a978b; --accent: #e0a03c; --accent2: #a8bf6a;
+    --ok: #8fce6a; --warn: #e0a03c; --err: #e4735f; --info: #7fb4d9;
+    --mono: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--text); min-height: 100vh;
+         font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+  header { padding: 22px 32px 12px; display: flex; align-items: baseline; gap: 14px;
+           flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+  header h1 { font-size: 1.15rem; font-family: var(--mono); letter-spacing: 0.02em; }
+  header h1::before { content: "▚ "; color: var(--accent); }
+  header h1 span { color: var(--accent); }
+  header a { color: var(--accent2); font-size: 0.85rem; text-decoration: none; }
+  .live { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.8rem; }
+  .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%;
+                  background: var(--ok); animation: pulse 1.6s infinite; }
+  @keyframes pulse { 50% { opacity: 0.3; } }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+           gap: 12px; padding: 14px 32px; }
+  .tile { background: var(--panel); border: 1px solid var(--border); border-radius: 4px;
+          padding: 14px 16px; }
+  .tile .num { font-size: 1.7rem; font-weight: 650; font-family: var(--mono); }
+  .tile .lbl { color: var(--muted); font-size: 0.72rem; margin-top: 2px;
+               text-transform: uppercase; letter-spacing: 0.06em; }
+  .tile.agent { border-color: var(--accent); }
+  .tile.agent .num { color: var(--accent); }
+  .grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 14px; padding: 0 32px 32px; }
+  @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px;
+          padding: 14px 16px; display: flex; flex-direction: column; min-height: 240px; }
+  .card h2 { font-size: 0.85rem; color: var(--muted); font-weight: 600;
+             text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .scroll { overflow-y: auto; max-height: 300px; }
+  .req { font-family: Consolas, monospace; font-size: 0.76rem; padding: 5px 8px;
+         border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: baseline; }
+  .req:last-child { border-bottom: none; }
+  .req .t { color: var(--muted); flex-shrink: 0; }
+  .req.agent { border-left: 3px solid var(--accent); background: rgba(224,160,60,0.07); }
+  .req .who { font-size: 0.65rem; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+  .s-2xx { color: var(--ok); } .s-4xx { color: var(--warn); } .s-5xx { color: var(--err); }
+  .ev { font-size: 0.8rem; padding: 5px 8px; border-bottom: 1px solid var(--border);
+        color: var(--text); display: flex; gap: 8px; align-items: baseline; }
+  .ev:last-child { border-bottom: none; }
+  .ev .t { color: var(--muted); font-family: Consolas, monospace; font-size: 0.72rem; flex-shrink: 0; }
+  .ev.agent { border-left: 3px solid var(--accent); background: rgba(224,160,60,0.07); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  th { text-align: left; color: var(--muted); font-size: 0.7rem; text-transform: uppercase;
+       letter-spacing: 0.05em; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  td { padding: 7px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 0.74rem; }
+  .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--dot); }
+  .st-created { --dot: var(--muted); } .st-picked_up { --dot: var(--warn); }
+  .st-in_transit, .st-out_for_delivery { --dot: var(--info); }
+  .st-delivered { --dot: var(--ok); } .st-delayed { --dot: var(--err); }
+  .mono { font-family: Consolas, monospace; }
+  .full { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Aero<span>Track</span> — Live Operations Monitor</h1>
+  <span class="live">simulator running</span>
+  <a href="/">← Doc2Agent</a>
+  <a href="/demo/docs" target="_blank">API docs ↗</a>
+</header>
+
+<div class="tiles" id="tiles"></div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Live API requests <span style="color:var(--accent)">(agent calls highlighted)</span></h2>
+    <div class="scroll" id="requests"></div>
+  </div>
+  <div class="card">
+    <h2>Shipments — latest activity</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>ID</th><th>Route</th><th>Status</th><th>Priority</th><th>Courier</th><th>Updated</th></tr></thead>
+        <tbody id="shipments"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card full">
+    <h2>System event stream</h2>
+    <div class="scroll" id="events"></div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const hhmmss = (iso) => (iso || "").slice(11, 19);
+
+const TILE_DEFS = [
+  ["total", "Total shipments"], ["in_transit", "In transit"],
+  ["delivered", "Delivered"], ["delayed", "Delayed"],
+  ["idle_couriers", "Idle couriers"], ["agent_calls", "AI-agent API calls"],
+];
+
+function render(data) {
+  $("tiles").innerHTML = TILE_DEFS.map(([key, label]) =>
+    `<div class="tile ${key === "agent_calls" ? "agent" : ""}">
+       <div class="num">${data.stats[key] ?? 0}</div><div class="lbl">${label}</div></div>`
+  ).join("");
+
+  $("requests").innerHTML = data.requests.map(r => {
+    const cls = r.status < 300 ? "s-2xx" : r.status < 500 ? "s-4xx" : "s-5xx";
+    return `<div class="req ${r.caller === "agent" ? "agent" : ""}">
+      <span class="t">${hhmmss(r.time)}</span>
+      ${r.caller === "agent" ? '<span class="who">AGENT</span>' : ""}
+      <span>${esc(r.method)} ${esc(r.path)}</span>
+      <span class="${cls}">${r.status}</span></div>`;
+  }).join("") || '<div class="ev">No API traffic yet — generate an agent and ask it something.</div>';
+
+  $("shipments").innerHTML = data.shipments.map(s => `
+    <tr><td class="mono">${esc(s.id)}</td>
+    <td>${esc(s.origin_city)} → ${esc(s.dest_city)}</td>
+    <td><span class="chip st-${esc(s.status)}">${esc(s.status.replace(/_/g, " "))}</span></td>
+    <td>${esc(s.priority)}</td>
+    <td class="mono">${esc(s.courier_id || "—")}</td>
+    <td class="mono">${hhmmss(s.updated_at)}</td></tr>`).join("");
+
+  $("events").innerHTML = data.events.map(e =>
+    `<div class="ev ${e.kind === "agent" ? "agent" : ""}">
+       <span class="t">${hhmmss(e.time)}</span><span>${esc(e.text)}</span></div>`).join("");
+}
+
+async function tick() {
+  try {
+    const resp = await fetch("/api/monitor/feed");
+    if (resp.ok) render(await resp.json());
+  } catch (e) { /* server restarting; keep polling */ }
+}
+tick();
+setInterval(tick, 2000);
+</script>
+</body>
+</html>
