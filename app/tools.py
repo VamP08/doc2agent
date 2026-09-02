@@ -21,8 +21,12 @@ def tool_name(endpoint: Endpoint, index: int) -> str:
 def endpoint_to_tool(endpoint: Endpoint, index: int) -> dict:
     properties, required = {}, []
     for p in endpoint.params:
+        kind = TYPE_MAP.get(p.type, "string")
         properties[p.name] = {
-            "type": TYPE_MAP.get(p.type, "string"),
+            # Models routinely pass null for optional params they choose to skip,
+            # and Groq validates arguments against this schema — a bare type
+            # rejects that as `expected string, but got null` and kills the call.
+            "type": kind if p.required else [kind, "null"],
             "description": f"({p.location}) {p.description}".strip(),
         }
         if p.required:
@@ -67,6 +71,8 @@ def execute_endpoint(
 
     locations = {p.name: p.location for p in endpoint.params}
     for name, value in args.items():
+        if value is None:  # a skipped optional param, not a value to send
+            continue
         loc = locations.get(name, "query")
         if loc == "path":
             path = path.replace("{" + name + "}", str(value))

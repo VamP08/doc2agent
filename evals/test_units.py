@@ -26,6 +26,40 @@ def test_tool_schema_shape():
     assert "(path)" in schema["parameters"]["properties"]["petId"]["description"]
 
 
+def test_optional_params_accept_null():
+    """Models pass null for skipped optionals; Groq validates against this schema,
+    so a non-nullable optional kills the whole tool call with a 400."""
+    schema = endpoint_to_tool(EP, 0)["function"]["parameters"]["properties"]
+    assert schema["verbose"]["type"] == ["boolean", "null"]   # optional -> nullable
+    assert schema["petId"]["type"] == "integer"               # required -> strict
+
+
+def test_executor_skips_null_args():
+    from unittest.mock import patch
+
+    captured = {}
+
+    class FakeResp:
+        status_code = 200
+        is_success = True
+        text = "{}"
+
+    class FakeClient:
+        def __init__(self, **kw): pass
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def request(self, method, url, params=None, json=None, headers=None):
+            captured.update(params=params, json=json, url=url)
+            return FakeResp()
+
+    from app import tools
+    with patch.object(tools.httpx, "Client", FakeClient), \
+         patch.object(tools, "assert_public_url", lambda url: None):
+        tools.execute_endpoint(EP, {"petId": 7, "verbose": None}, "https://api.example.com")
+    assert captured["url"].endswith("/pets/7")
+    assert captured["params"] is None  # the null optional was dropped, not sent
+
+
 def test_toolset_cap_and_unique_names():
     endpoints = [Endpoint(method="GET", path=f"/x/{i}") for i in range(60)]
     schemas, registry = build_toolset(endpoints)
