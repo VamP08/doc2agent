@@ -7,6 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"
+  integrity="sha384-/TQbtLCAerC3jgaim+N78RZSDYV7ryeoBCVqTuzRrFec2akfBkHS7ACQ3PQhvMVi"
+  crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"
+  integrity="sha384-+VfUPEb0PdtChMwmBcBmykRMDd+v6D/oFmB3rZM/puCMDYcIvF968OimRh4KQY9a"
+  crossorigin="anonymous"></script>
 <style>
 /*
   Blue Eclipse. Decisions this interface makes, and what each costs:
@@ -68,10 +74,16 @@ kbd{font:400 12px var(--mono)}
   background:var(--panel);border:1px solid var(--line-2);color:var(--ink);
   font:400 13px var(--mono);outline:none}
 .auth input:focus{border-color:var(--line-3)}
-.demo{margin-top:var(--s4);font-size:13.5px;color:var(--ink-3)}
-.demo button{background:none;border:none;color:var(--acc-ink);padding:0;font-size:13.5px;
-  text-decoration:underline;text-underline-offset:3px}
-.demo button:hover{color:var(--acc)}
+.presets{margin-top:var(--s5)}
+.presets .cap{font:500 12px/1 var(--ui);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-4);margin-bottom:var(--s3)}
+.presets .grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2)}
+@media (max-width:560px){.presets .grid{grid-template-columns:1fr}}
+.preset{text-align:left;background:var(--panel);border:1px solid var(--line-2);
+  border-radius:var(--box);padding:var(--s3) var(--s4);color:var(--ink-2)}
+.preset:hover{border-color:var(--acc-line);background:var(--panel-2)}
+.preset .n{font:500 13.5px/1.35 var(--ui);color:var(--ink)}
+.preset .d{font:400 12px/1.5 var(--ui);color:var(--ink-4);margin-top:2px}
 .pipeline{margin-top:var(--s6);border:1px solid var(--line);border-radius:var(--box);
   background:var(--panel);overflow:hidden}
 .pipeline div{display:flex;gap:var(--s3);padding:11px var(--s4);border-bottom:1px solid var(--line);
@@ -128,9 +140,32 @@ kbd{font:400 12px var(--mono)}
 .ask{font:500 17.5px/1.45 var(--ui);color:var(--ink);letter-spacing:-.018em;max-width:56ch;
   overflow-wrap:break-word}
 .said{font-size:14px;line-height:1.75;color:var(--ink-2);max-width:68ch;margin-top:var(--s3);
-  white-space:pre-wrap;overflow-wrap:break-word}
-.said.thinking{color:var(--ink-4)}
-.said.error{color:var(--err)}
+  overflow-wrap:break-word}
+.said.thinking{color:var(--ink-4);white-space:pre-wrap}
+.said.error{color:var(--err);white-space:pre-wrap}
+/* the model answers in markdown — style it in the same system */
+.said p{margin:0 0 var(--s3)}
+.said p:last-child{margin-bottom:0}
+.said strong{color:var(--ink);font-weight:600}
+.said code{font:400 13px var(--mono);color:var(--acc-ink)}
+.said pre{background:var(--sunk);border:1px solid var(--line);border-radius:var(--box);
+  padding:var(--s3) var(--s4);overflow-x:auto;margin:0 0 var(--s3)}
+.said pre code{color:var(--ink-2)}
+.said ul,.said ol{margin:0 0 var(--s3);padding-left:22px}
+.said li{margin:3px 0}
+.said h1,.said h2,.said h3,.said h4{font:600 15px/1.5 var(--ui);color:var(--ink);
+  margin:var(--s4) 0 var(--s2);letter-spacing:-.01em}
+.said a{color:var(--acc-ink)}
+.said blockquote{border-left:2px solid var(--line-3);padding-left:var(--s3);
+  color:var(--ink-3);margin:0 0 var(--s3)}
+.said table{border-collapse:collapse;margin:0 0 var(--s3);display:block;
+  overflow-x:auto;max-width:100%;font-size:13px}
+.said th{text-align:left;font:500 12px/1.4 var(--ui);letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-4);padding:6px 12px 6px 0;
+  border-bottom:1px solid var(--line-2)}
+.said td{padding:6px 12px 6px 0;border-bottom:1px solid var(--line);
+  color:var(--ink-2);vertical-align:top}
+.said hr{border:none;border-top:1px solid var(--line);margin:var(--s3) 0}
 .evline{margin-top:var(--s4);font:400 12px/1.5 var(--mono);color:var(--ink-4)}
 .calls{margin-top:var(--s3);width:100%;border-collapse:collapse}
 .calls th{text-align:left;font:400 12px/1 var(--mono);color:var(--ink-4);font-weight:400;
@@ -167,6 +202,22 @@ tr.heldrow .s{color:var(--acc-ink)}
 .cnote b{color:var(--acc-ink);font-weight:400}
 .cnote button{background:none;border:none;color:var(--acc-ink);font:inherit;padding:0;
   text-decoration:underline;text-underline-offset:2px}
+
+/* orientation block after loading an API */
+.orient .apidesc{font-size:14px;line-height:1.7;color:var(--ink-3);max-width:64ch;
+  margin-top:var(--s2)}
+.orient .counts{margin-top:var(--s3);font:400 12.5px/1.6 var(--mono);color:var(--ink-4)}
+.orient .counts b{color:var(--ink-3);font-weight:400}
+.orient .cap{font:500 12px/1 var(--ui);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-4);margin:var(--s4) 0 var(--s3)}
+.suggs{display:flex;flex-wrap:wrap;gap:var(--s2)}
+.sugg{height:32px;padding:0 var(--s4);border-radius:var(--pill);background:none;
+  border:1px solid var(--line-2);color:var(--ink-2);font:400 13px/1 var(--ui);
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sugg:hover{border-color:var(--acc-line);color:var(--ink);background:var(--panel)}
+.orient .browse{margin-top:var(--s3);background:none;border:none;padding:0;
+  color:var(--acc-ink);font-size:13px}
+.orient .browse:hover{text-decoration:underline;text-underline-offset:3px}
 
 /* endpoints view */
 .epsearch{margin-top:var(--s4)}
@@ -272,9 +323,11 @@ tr.heldrow .s{color:var(--acc-ink)}
           <input id="authheader" value="Authorization" aria-label="Auth header name">
         </div>
       </details>
-      <div class="demo">No API handy? <button id="use-demo">Load the built-in AeroTrack demo</button>
-        — a simulated logistics API with live traffic to watch on the monitor.</div>
       <div class="status" id="ingest-status" aria-live="polite"></div>
+    </div>
+    <div class="presets">
+      <div class="cap">Or start from one of these</div>
+      <div class="grid" id="preset-grid"></div>
     </div>
     <div class="pipeline" aria-label="What happens next">
       <div><span class="mk">1</span>Fetch the documentation</div>
@@ -317,10 +370,7 @@ tr.heldrow .s{color:var(--acc-ink)}
 
     <div class="scroller" id="scroller">
       <div class="thread" id="thread" role="log" aria-label="Conversation">
-        <div class="turn" id="hello">
-          <div class="said">Agent ready. Ask anything this API can answer — every call it makes
-            is shown, and writes stop for your approval.</div>
-        </div>
+        <div class="turn orient" id="hello"></div>
       </div>
       <div id="allcalls-view" hidden>
         <table class="calls" style="max-width:86ch">
@@ -390,11 +440,48 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 const state = {
-  sessionId: null, baseUrl: "", host: "", endpoints: [], source: "",
+  sessionId: null, baseUrl: "", host: "", basePath: "", endpoints: [], source: "",
+  apiTitle: "", apiDescription: "", presetKey: null,
   keyLast4: "", authHeader: "Authorization",
   autoApprove: false, holding: null, streaming: false,
   calls: [],           // {kind, method, path, status, bad}
 };
+
+/* Example APIs a first-time visitor can start from. Suggestions are just
+   prefilled questions — the agent answers them with real calls. */
+const PRESETS = [
+  { key: "aerotrack", name: "AeroTrack (built-in demo)",
+    desc: "Simulated logistics API with live traffic — watch it on the monitor",
+    url: () => location.origin + "/demo/openapi.json",
+    suggs: ["What can you do with this API?",
+            "Which couriers are idle right now?",
+            "Create an express shipment from Mumbai to Pune and assign an idle courier."] },
+  { key: "petstore", name: "Swagger Petstore",
+    desc: "The classic OpenAPI example — pets, orders, users",
+    url: () => "https://petstore3.swagger.io/api/v3/openapi.json",
+    suggs: ["What can you do with this API?",
+            "Find the available pets and summarise them.",
+            "Add a new pet called Rex, then look it up by its id."] },
+  { key: "weather", name: "US National Weather Service",
+    desc: "Real live forecasts — read-only, no key needed",
+    url: () => "https://api.weather.gov/openapi.json",
+    suggs: ["What can you do with this API?",
+            "What's the forecast for latitude 39.74, longitude -104.99?",
+            "Are there any active weather alerts for New York?"] },
+  { key: "digitalocean", name: "DigitalOcean (659 endpoints)",
+    desc: "Shows large-API routing — add your DO token for real calls",
+    url: () => "https://raw.githubusercontent.com/digitalocean/openapi/main/specification/DigitalOcean-public.v2.yaml",
+    suggs: ["What can you do with this API?",
+            "Which endpoints would I use to manage droplets?"] },
+];
+
+/* markdown answers, rendered safely; plain text if the CDN scripts didn't load */
+function md(text) {
+  if (window.marked && window.DOMPurify) {
+    return DOMPurify.sanitize(marked.parse(String(text), { breaks: true, gfm: true }));
+  }
+  return `<p style="white-space:pre-wrap">${esc(text)}</p>`;
+}
 
 /* ── helpers ── */
 const isWrite = m => !["GET", "HEAD", "OPTIONS"].includes(String(m).toUpperCase());
@@ -427,6 +514,17 @@ function renderAllCalls() {
 }
 
 /* ── ingest ── */
+$("preset-grid").innerHTML = PRESETS.map(p =>
+  `<button class="preset" data-preset="${p.key}">
+     <div class="n">${esc(p.name)}</div><div class="d">${esc(p.desc)}</div></button>`).join("");
+$("preset-grid").addEventListener("click", e => {
+  const b = e.target.closest(".preset"); if (!b) return;
+  const p = PRESETS.find(x => x.key === b.dataset.preset);
+  state.presetKey = p.key;
+  $("url").value = p.url();
+  ingest(p.url());
+});
+
 async function ingest(url) {
   const st = $("ingest-status");
   st.className = "status"; st.textContent = "Fetching documentation and generating tools…";
@@ -447,6 +545,8 @@ async function ingest(url) {
     state.baseUrl = data.base_url;
     state.endpoints = data.endpoints;
     state.source = data.source === "openapi" ? "parsed spec" : "LLM-extracted";
+    state.apiTitle = data.api_title || "";
+    state.apiDescription = data.api_description || "";
     state.keyLast4 = key ? key.slice(-4) : "";
     state.authHeader = $("authheader").value.trim() || "Authorization";
     try { state.host = new URL(data.base_url).host; } catch { state.host = data.base_url; }
@@ -456,19 +556,56 @@ async function ingest(url) {
     st.className = "status err"; st.textContent = "Could not load: " + e.message;
   } finally { $("load").disabled = false; }
 }
-$("load").onclick = () => { const u = $("url").value.trim(); if (u) ingest(u); };
+$("load").onclick = () => { const u = $("url").value.trim();
+  if (u) { state.presetKey = null; ingest(u); } };
 $("url").addEventListener("keydown", e => { if (e.key === "Enter") $("load").click(); });
-$("use-demo").onclick = () => { $("url").value = location.origin + "/demo/openapi.json";
-  ingest($("url").value); };
+
+function suggestionsFor() {
+  const preset = PRESETS.find(p => p.key === state.presetKey);
+  if (preset) return preset.suggs;
+  // an arbitrary API: the universal opener plus simple reads it can run now
+  const out = ["What can you do with this API?"];
+  for (const ep of state.endpoints) {
+    if (out.length >= 3) break;
+    if (isWrite(ep.method)) continue;
+    if (ep.path.includes("{")) continue;
+    if (ep.params.some(p => p.required)) continue;
+    const seg = ep.path.split("/").filter(s => s && !s.startsWith("{")).pop();
+    if (seg) out.push(`List the ${seg.replace(/[_-]/g, " ")}.`);
+  }
+  return out;
+}
+
+function renderOrientation() {
+  const reads = state.endpoints.filter(ep => !isWrite(ep.method)).length;
+  const writes = state.endpoints.length - reads;
+  const title = state.apiTitle || state.host;
+  $("hello").innerHTML = `
+    <div class="ask">${esc(title)} is loaded.</div>
+    ${state.apiDescription ? `<div class="apidesc">${esc(state.apiDescription)}</div>` : ""}
+    <div class="counts"><b>${state.endpoints.length} endpoints</b> became tools:
+      ${reads} read${reads === 1 ? "" : "s"} the agent can call freely,
+      ${writes} write${writes === 1 ? "" : "s"} that stop for your approval.</div>
+    <div class="cap">Try one</div>
+    <div class="suggs">${suggestionsFor().map(q =>
+      `<button class="sugg" title="${esc(q)}">${esc(q)}</button>`).join("")}</div>
+    <button class="browse">Browse all ${state.endpoints.length} endpoints →</button>`;
+  $("hello").querySelectorAll(".sugg").forEach(b => b.onclick = () => {
+    $("prompt").value = b.title; send();
+  });
+  $("hello").querySelector(".browse").onclick = () =>
+    document.querySelector('.ni[data-view="endpoints"]').click();
+}
 
 function enterApp() {
   $("view-empty").hidden = true;
   $("view-app").hidden = false;
-  $("nav-who").textContent = state.host;
+  $("nav-who").textContent = state.apiTitle || state.host;
   $("nav-src").textContent = `${state.endpoints.length} endpoints · ${state.source}`;
   $("nav-epcount").textContent = state.endpoints.length;
   $("crumb").textContent = state.baseUrl.replace(/^https?:\/\//, "");
   $("nav-mcp").href = `/api/sessions/${state.sessionId}/mcp`;
+  renderOrientation();
   renderEndpoints("");
   $("prompt").focus();
 }
@@ -557,7 +694,9 @@ function addTurn(question, sideTag) {
     },
     say(text, cls) {
       const s = this.el.querySelector(".said");
-      s.textContent = text; s.className = "said" + (cls ? " " + cls : "");
+      s.className = "said" + (cls ? " " + cls : "");
+      if (cls) s.textContent = text;      // thinking / error stay plain
+      else s.innerHTML = md(text);        // answers are markdown, sanitized
     },
   };
 }

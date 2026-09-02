@@ -202,14 +202,24 @@ def llm_extract(text: str, page_url: str) -> tuple[str, list[Endpoint]]:
     return base_url, list(seen.values())
 
 
-def ingest(url: str) -> tuple[str, str, list[Endpoint]]:
-    """Return (source, base_url, endpoints) for a docs URL."""
+def spec_meta(spec: dict) -> tuple[str, str]:
+    """The API's own name and blurb, so the UI can say what was just loaded."""
+    info = spec.get("info") or {}
+    title = str(info.get("title") or "").strip()[:120]
+    description = str(info.get("description") or "").strip()
+    description = " ".join(description.split())[:400]
+    return title, description
+
+
+def ingest(url: str) -> tuple[str, str, list[Endpoint], str, str]:
+    """Return (source, base_url, endpoints, api_title, api_description)."""
     _, text = fetch(url)
 
     spec = try_parse_spec(text)
     if spec:
         base_url, endpoints = parse_openapi(spec, url)
-        return "openapi", base_url, endpoints
+        title, description = spec_meta(spec)
+        return "openapi", base_url, endpoints, title, description
 
     doc_text = html_to_text(text)
     if len(doc_text) < 200:
@@ -220,4 +230,4 @@ def ingest(url: str) -> tuple[str, str, list[Endpoint]]:
     base_url, endpoints = llm_extract(doc_text, url)
     if not endpoints:
         raise ValueError("No REST endpoints could be extracted from this page.")
-    return "llm", base_url, endpoints
+    return "llm", base_url, endpoints, "", ""

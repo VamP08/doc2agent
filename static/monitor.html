@@ -135,7 +135,11 @@ td.route{color:var(--ink)}
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const hhmmss = iso => (iso || "").slice(11, 19);
+// backend timestamps are UTC with an offset; show them in the viewer's own time
+const hhmmss = iso => {
+  const d = new Date(iso);
+  return isNaN(d) ? (iso || "").slice(11, 19) : d.toTimeString().slice(0, 8);
+};
 
 const TILES = [
   ["total", "Total shipments"], ["in_transit", "In transit"], ["delivered", "Delivered"],

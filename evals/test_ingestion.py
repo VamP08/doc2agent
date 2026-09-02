@@ -73,6 +73,15 @@ def test_swagger_v2_supported():
     assert endpoints[0].params[0].type == "integer"
 
 
+def test_spec_meta_extracts_title_and_flattened_description():
+    from app.ingest import spec_meta
+
+    title, desc = spec_meta({"info": {"title": "X API", "description": "  Hello\n  world  "}})
+    assert title == "X API"
+    assert desc == "Hello world"
+    assert spec_meta({}) == ("", "")
+
+
 def test_non_spec_returns_none():
     assert try_parse_spec("<html><body>not a spec</body></html>") is None
     assert try_parse_spec('{"just": "json"}') is None

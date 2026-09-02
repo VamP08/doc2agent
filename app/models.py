@@ -31,6 +31,8 @@ class IngestResponse(BaseModel):
     base_url: str
     source: Literal["openapi", "llm"]
     endpoints: list[Endpoint]
+    api_title: str = ""
+    api_description: str = ""
 
 
 class ChatRequest(BaseModel):

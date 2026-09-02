@@ -1,11 +1,13 @@
 """Doc2Agent — turn any API's documentation into a working AI agent."""
 import asyncio
 import json
+import os
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import urlparse
 
+import httpx
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -26,12 +28,36 @@ from .models import (  # noqa: E402
 from .safety import UnsafeURLError, trust_own_netloc  # noqa: E402
 
 
+# Render's free tier spins an instance down after 15 idle minutes. Pinging our
+# own public URL every 10 minutes keeps it warm; that is the platform's intended
+# accounting — an always-on service simply spends the workspace's 750 free
+# instance-hours a month, and one service running 24/7 uses ~720 of them.
+# RENDER_EXTERNAL_URL is set by Render itself, so this is inert everywhere else.
+# Opt out with KEEP_ALIVE=0 (e.g. when several services share the 750 hours).
+KEEP_ALIVE_URL = os.environ.get("KEEP_ALIVE_URL") or os.environ.get("RENDER_EXTERNAL_URL")
+KEEP_ALIVE_ENABLED = bool(KEEP_ALIVE_URL) and os.environ.get("KEEP_ALIVE", "1") != "0"
+
+
+async def keep_alive_loop() -> None:
+    url = KEEP_ALIVE_URL.rstrip("/") + "/healthz"
+    while True:
+        await asyncio.sleep(600)
+        try:
+            async with httpx.AsyncClient(timeout=20) as client:
+                await client.get(url)
+        except Exception:
+            pass  # a missed ping just risks one spin-down, never a crash
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     demo_data.seed()
-    task = asyncio.create_task(demo_data.simulator_loop())
+    tasks = [asyncio.create_task(demo_data.simulator_loop())]
+    if KEEP_ALIVE_ENABLED:
+        tasks.append(asyncio.create_task(keep_alive_loop()))
     yield
-    task.cancel()
+    for task in tasks:
+        task.cancel()
 
 
 app = FastAPI(title="Doc2Agent", version="2.0.0", lifespan=lifespan)
@@ -74,7 +100,7 @@ def api_ingest(req: IngestRequest, request: Request) -> IngestResponse:
         trust_own_netloc(parsed.netloc)
 
     try:
-        source, base_url, endpoints = ingest(req.url)
+        source, base_url, endpoints, api_title, api_description = ingest(req.url)
     except UnsafeURLError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except ValueError as exc:
@@ -92,7 +118,8 @@ def api_ingest(req: IngestRequest, request: Request) -> IngestResponse:
     )
     _save_session(session_id, session)
     return IngestResponse(
-        session_id=session_id, base_url=base_url, source=source, endpoints=endpoints
+        session_id=session_id, base_url=base_url, source=source, endpoints=endpoints,
+        api_title=api_title, api_description=api_description,
     )
 
 
