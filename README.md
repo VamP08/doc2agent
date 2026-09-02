@@ -16,12 +16,10 @@ Beyond the core loop:
 
 - Write operations (POST/PUT/PATCH/DELETE) pause the agent and ask for your approval before executing. There's an auto-approve toggle if you'd rather not click.
 - Tool calls stream to the UI over SSE as they happen, including routing decisions and approval prompts.
-- Large APIs get routed: endpoints are clustered by path segment and a small model picks the relevant clusters per question, so a 200-endpoint API doesn't blow the context budget.
+- Large APIs get routed: endpoints are clustered by the first path segment that names a resource, and a small model picks the relevant clusters per question, so a 600-endpoint API doesn't blow the context budget.
 - Sessions persist in SQLite, so conversations survive restarts.
 - Any ingested API can be exported as a standalone MCP server file, usable from Claude Desktop or Cursor.
 - SSRF protection: every hostname must resolve to a public IP or the request is refused.
-
-Component-level detail lives in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## The built-in demo
 
@@ -56,11 +54,11 @@ Note: docs sites that render via JavaScript can't be scraped. Use the API's spec
 ## Tests and evals
 
 ```bash
-pytest evals -q               # 30 offline tests, no API key needed
+pytest evals -q               # 54 offline tests, no API key needed
 python -m evals.agent_evals   # live tasks against a running server
 ```
 
-The offline suite covers spec parsing against a pinned Petstore snapshot, the SSRF guard, the demo API contracts, tool synthesis, MCP export validity, and session serialization. The live evals run scripted tasks and verify the outcome against the actual data store rather than trusting the agent's reply; results go to `evals/scorecard.md`. CI runs the offline suite on every push, and the live evals too if a `GROQ_API_KEY` secret is configured.
+The offline suite covers spec parsing against a pinned Petstore snapshot, the SSRF guard, the demo API contracts, tool synthesis, MCP export validity, session serialization, model failover, approval-denial handling, and routing against DigitalOcean's 659-endpoint path list. The live evals run scripted tasks and verify the outcome against the actual data store rather than trusting the agent's reply; results go to `evals/scorecard.md`. CI runs the offline suite on every push, and the live evals too if a `GROQ_API_KEY` secret is configured.
 
 ## Deploying
 
@@ -68,4 +66,4 @@ The Dockerfile listens on `$PORT` if the host sets it, otherwise 7860. Currently
 
 ## Stack
 
-FastAPI, Groq (Llama 3.3 70B), httpx, BeautifulSoup, Pydantic, SQLite, vanilla JS. No frontend framework. MIT licensed.
+FastAPI, Groq (gpt-oss-120b, with failover across model candidates), httpx, BeautifulSoup, Pydantic, SQLite, vanilla JS. No frontend framework. MIT licensed.

@@ -7,7 +7,6 @@ Two paths:
    have the model extract endpoint definitions as structured JSON.
 """
 import json
-import os
 from urllib.parse import urljoin, urlparse
 
 import httpx
@@ -15,14 +14,13 @@ import yaml
 from bs4 import BeautifulSoup
 from groq import Groq
 
+from .llm import EXTRACTION_MODELS, candidates, complete
 from .models import Endpoint, Param
 from .safety import assert_public_url
 
 USER_AGENT = "Doc2Agent/1.0 (+portfolio demo)"
 MAX_DOC_CHARS = 40_000
 LLM_CHUNK_CHARS = 14_000
-
-EXTRACTION_MODEL = os.environ.get("GROQ_EXTRACTION_MODEL", "llama-3.3-70b-versatile")
 
 EXTRACTION_PROMPT = """You are an expert API-documentation parser.
 From the documentation text below, extract every REST endpoint you can find.
@@ -172,13 +170,15 @@ def html_to_text(html: str) -> str:
 def llm_extract(text: str, page_url: str) -> tuple[str, list[Endpoint]]:
     """Extract endpoints from free-form docs text via the LLM, chunk by chunk."""
     client = Groq()
+    models = candidates("extraction", EXTRACTION_MODELS)
     chunks = [text[i : i + LLM_CHUNK_CHARS] for i in range(0, len(text), LLM_CHUNK_CHARS)]
 
     base_url = ""
     seen: dict[str, Endpoint] = {}
     for chunk in chunks[:3]:
-        completion = client.chat.completions.create(
-            model=EXTRACTION_MODEL,
+        completion = complete(
+            client,
+            models,
             response_format={"type": "json_object"},
             temperature=0,
             messages=[{"role": "user", "content": EXTRACTION_PROMPT + chunk}],

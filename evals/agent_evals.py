@@ -16,6 +16,8 @@ from pathlib import Path
 
 import httpx
 
+from app.llm import AGENT_MODELS, candidates
+
 BASE = os.environ.get("DOC2AGENT_URL", "http://127.0.0.1:8000")
 SCORECARD = Path(__file__).parent / "scorecard.md"
 
@@ -125,7 +127,7 @@ def main() -> int:
     lines = [
         "# Agent Eval Scorecard",
         "",
-        f"**Score: {score}** · model: `{os.environ.get('GROQ_AGENT_MODEL', 'llama-3.3-70b-versatile')}` · {timestamp}",
+        f"**Score: {score}** · models: `{', '.join(candidates('agent', AGENT_MODELS))}` · {timestamp}",
         "",
         "Each task is verified against the live store, not the agent's claim.",
         "",
