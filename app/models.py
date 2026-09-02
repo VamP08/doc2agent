@@ -41,6 +41,9 @@ class ChatRequest(BaseModel):
 
 class ApprovalDecision(BaseModel):
     approve: bool
+    # A denial without a reason teaches the agent nothing; it just retries the
+    # same shape next turn. The reason is fed back as the tool result.
+    reason: str = ""
 
 
 class ToolCallTrace(BaseModel):

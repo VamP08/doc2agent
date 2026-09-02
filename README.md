@@ -14,7 +14,8 @@ Most tool-calling demos ship with tools someone wrote by hand. Here the tools do
 
 Beyond the core loop:
 
-- Write operations (POST/PUT/PATCH/DELETE) pause the agent and ask for your approval before executing. There's an auto-approve toggle if you'd rather not click.
+- Write operations (POST/PUT/PATCH/DELETE) pause the agent: the held request opens in a side rail with the full payload, and you approve (Ctrl/Cmd+Enter), deny — optionally with a reason the agent is told — or turn on auto-approve for the session.
+- While a write is held you can still ask read-only side questions; they run as an isolated turn so the held conversation is never touched.
 - Tool calls stream to the UI over SSE as they happen, including routing decisions and approval prompts.
 - Large APIs get routed: endpoints are clustered by the first path segment that names a resource, and a small model picks the relevant clusters per question, so a 600-endpoint API doesn't blow the context budget.
 - Sessions persist in SQLite, so conversations survive restarts.
@@ -25,7 +26,7 @@ Beyond the core loop:
 
 The app ships with AeroTrack, a simulated logistics API (shipments, couriers, warehouses) with a background simulator that keeps orders flowing. Its OpenAPI spec is auto-generated, so it doubles as the test case for the deterministic ingestion path. Swagger docs are at `/demo/docs`.
 
-The demo worth doing: open `/monitor` in one window and the app in another, click "Use the built-in AeroTrack demo API", then ask:
+The demo worth doing: open `/monitor` in one window and the app in another, click "Load the built-in AeroTrack demo", then ask:
 
 > Create a new express shipment of 5 kg from Mumbai to Pune, find an idle courier, and assign them to it.
 

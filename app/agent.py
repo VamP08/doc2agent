@@ -231,16 +231,19 @@ def run_agent_events(
                     yield {
                         "type": "approval_required",
                         "approval_id": approval_id,
+                        "tool": tc.function.name,
                         "method": endpoint.method,
                         "path": endpoint.path,
                         "args": args,
                     }
-                    approved = APPROVALS.wait(approval_id)
-                    yield {"type": "approval_result", "approved": approved}
+                    approved, why = APPROVALS.wait(approval_id)
+                    yield {"type": "approval_result", "approved": approved, "reason": why}
                     denial = (
                         "Denied by the human operator. Do not repeat this call "
                         "while answering the current question."
                     )
+                    if why:
+                        denial += f" They gave this reason: {why}"
 
             if approved:
                 result, trace = _execute(session, endpoint, args)

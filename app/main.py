@@ -130,9 +130,40 @@ def api_chat_stream(req: ChatRequest) -> StreamingResponse:
     )
 
 
+@app.post("/api/chat/aside", response_model=ChatResponse)
+def api_chat_aside(req: ChatRequest) -> ChatResponse:
+    """A read-only side question, asked while a write is held.
+
+    The held session's thread is blocked mid-turn awaiting the human, so a
+    concurrent turn on it would corrupt the message history. Instead the
+    question runs as an isolated one-shot turn over the same API with only
+    read tools — the main session is never touched.
+    """
+    session = _get_session(req.session_id)
+    reads = [ep for ep in session.endpoints if ep.method.upper() in ("GET", "HEAD")]
+    if not reads:
+        raise HTTPException(status_code=422, detail="This API exposes no read-only endpoints.")
+    aside = AgentSession(
+        base_url=session.base_url,
+        endpoints=reads,
+        api_key=session.api_key,
+        auth_header=session.auth_header,
+        auth_scheme=session.auth_scheme,
+    )
+    aside.messages[0]["content"] += (
+        "\n\nThis is a read-only side question, asked while a write operation "
+        "awaits the user's approval. Only read tools are available here."
+    )
+    try:
+        reply, traces = run_agent(aside, req.message)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=_agent_error_detail(exc))
+    return ChatResponse(reply=reply, trace=traces)
+
+
 @app.post("/api/approvals/{approval_id}")
 def api_resolve_approval(approval_id: str, decision: ApprovalDecision) -> dict:
-    if not APPROVALS.resolve(approval_id, decision.approve):
+    if not APPROVALS.resolve(approval_id, decision.approve, decision.reason):
         raise HTTPException(status_code=404, detail="Approval not found or already resolved.")
     return {"ok": True, "approved": decision.approve}
 

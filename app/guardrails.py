@@ -30,27 +30,34 @@ class ApprovalRegistry:
             self._pending[approval_id] = {
                 "event": threading.Event(),
                 "approved": False,
+                "reason": "",
                 "info": info,
             }
         return approval_id
 
-    def wait(self, approval_id: str, timeout: float = APPROVAL_TIMEOUT_S) -> bool:
-        """Block the agent thread until resolved; timeout means denied."""
+    def wait(
+        self, approval_id: str, timeout: float = APPROVAL_TIMEOUT_S
+    ) -> tuple[bool, str]:
+        """Block the agent thread until resolved; timeout means denied.
+
+        Returns (approved, reason). The reason is only ever set on a denial.
+        """
         with self._lock:
             entry = self._pending.get(approval_id)
         if entry is None:
-            return False
+            return False, ""
         entry["event"].wait(timeout)
         with self._lock:
             self._pending.pop(approval_id, None)
-        return entry["approved"]
+        return entry["approved"], entry["reason"]
 
-    def resolve(self, approval_id: str, approved: bool) -> bool:
+    def resolve(self, approval_id: str, approved: bool, reason: str = "") -> bool:
         with self._lock:
             entry = self._pending.get(approval_id)
             if entry is None:
                 return False
             entry["approved"] = approved
+            entry["reason"] = reason
             entry["event"].set()
             return True
 
