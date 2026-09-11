@@ -225,6 +225,17 @@ def monitor_feed() -> dict:
             "idle_couriers": sum(1 for c in demo_data.couriers.values() if c["status"] == "idle"),
             "agent_calls": sum(1 for r in demo_data.request_log if r["caller"] == "agent"),
         },
+        # The monitor draws the fleet, not just the request log: per-status counts and the
+        # courier/warehouse load are what actually move while the simulator runs.
+        "by_status": by_status,
+        "couriers": [
+            {k: c[k] for k in ("id", "name", "city", "status", "active_shipments")}
+            for c in demo_data.couriers.values()
+        ],
+        "warehouses": [
+            {k: w[k] for k in ("id", "city", "capacity", "packages_held")}
+            for w in demo_data.warehouses.values()
+        ],
         "requests": list(demo_data.request_log)[:40],
         "events": list(demo_data.events)[:30],
         "shipments": [{k: v for k, v in s.items() if k != "events"} for s in recent],

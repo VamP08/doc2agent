@@ -4,129 +4,322 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>AeroTrack — live monitor</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="description" content="Live view of the bundled AeroTrack demo API: shipments moving through the fleet, with the agent's own requests marked.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&family=Sometype+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-/* Blue Eclipse — same system as the app. This page watches the bundled demo
-   API: the simulator's background traffic, with the agent's calls marked. */
 :root{
-  --mono:"Spline Sans Mono",ui-monospace,monospace;
-  --ui:"Sora",system-ui,sans-serif;
-  --pill:999px; --box:12px;
-  --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px;
-  --bg:#05070f;--panel:#0b0f1c;--panel-2:#0f1424;--sunk:#070a13;
-  --line:#171d2f;--line-2:#22293e;--line-3:#3d4767;
-  --ink:#eef1f8;--ink-2:#b2b9cc;--ink-3:#949bb0;--ink-4:#7b8299;
-  --acc:#5b8cff;--acc-dim:#0d1631;--acc-line:#3a5296;--acc-ink:#84a8ff;
-  --err:#e0655f;--ok:#5fae8c;--warn:#c49a55;
+  --ui:"Barlow",system-ui,-apple-system,sans-serif;
+  --lab:"Barlow Semi Condensed","Barlow",system-ui,sans-serif;
+  /* role scale: instrument / ask / answer / title / data / label / micro */
+  --t-inst:30px; --t-ask:18px; --t-ans:15px; --t-title:14px;
+  --t-data:13px; --t-label:12px; --t-micro:11.5px;
+  --t-title:15px;
+  --mono:"Sometype Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:6px; --r-sm:4px; --r-xs:3px;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:28px;
+  --bg:#06080d; --panel:#0c1018; --panel-2:#111726; --sunk:#04060a;
+  --line:#18202e; --line-2:#222c3f; --line-3:#33405a;
+  --ink:#e9eef7; --ink-2:#aebbcd; --ink-3:#8797ac; --ink-4:#7f8fa6;
+  --blue:#3b82f6; --blue-2:#60a5fa; --blue-ink:#93bbfd; --blue-dim:#0f1d38; --blue-line:#26437a;
+  --ok:#34d399; --ok-dim:#08251c; --warn:#fbbf24; --warn-dim:#241b06; --err:#f87171; --err-dim:#2a1113;
+  --get:#60a5fa; --post:#34d399; --put:#fbbf24; --patch:#a78bfa; --del:#f87171;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--ink-2);font:400 14px/1.6 var(--ui);
-  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;min-height:100vh}
-:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink-2);font:400 var(--t-ans)/1.55 var(--ui);
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;cursor:pointer;color:inherit;background:none;border:none}
+a{color:inherit;text-decoration:none}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--blue);outline-offset:1px;border-radius:3px}
+::selection{background:var(--blue-dim);color:var(--ink)}
 *{scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
-*::-webkit-scrollbar{width:10px}*::-webkit-scrollbar-track{background:transparent}
-*::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:99px;border:3px solid var(--bg)}
+*::-webkit-scrollbar{width:8px;height:8px}*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:99px}
+.m{font:500 var(--t-micro)/1 var(--mono);letter-spacing:.02em}
+.m.GET,.m.HEAD{color:var(--get)}.m.POST{color:var(--post)}.m.PUT{color:var(--put)}
+.m.PATCH{color:var(--patch)}.m.DELETE{color:var(--del)}
 
-header{display:flex;align-items:baseline;gap:var(--s4);padding:var(--s5) var(--s6) 0;
-  flex-wrap:wrap}
-.wm{font:700 17.5px/1 var(--ui);color:var(--ink);letter-spacing:-.035em}
-.wm b{color:var(--acc);font-weight:700}
-header .sub{font:400 12px/1 var(--mono);color:var(--ink-4)}
-.live{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 var(--s3);
-  border-radius:var(--pill);font:500 12px/1 var(--ui);
-  background:var(--acc-dim);color:var(--acc-ink);border:1px solid var(--acc-line)}
-.live .d{width:5px;height:5px;border-radius:50%;background:var(--acc);
-  animation:pulse 1.6s steps(1,end) infinite}
-@keyframes pulse{50%{opacity:.25}}
-@media (prefers-reduced-motion:reduce){.live .d{animation:none}
-  *{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-header a{margin-left:auto;color:var(--acc-ink);font-size:14px;text-decoration:none}
-header a:hover{text-decoration:underline;text-underline-offset:3px}
-.asof{font:400 12px/1 var(--mono);color:var(--ink-4)}
+.badge{display:inline-flex;align-items:center;gap:6px;height:21px;padding:0;border-radius:3px;
+  font:500 var(--t-label)/1 var(--lab);letter-spacing:.03em;color:var(--ink-3);
+  border:1px solid transparent;white-space:nowrap}
+.badge .d{width:5px;height:5px;flex:none;background:currentColor}
+.badge.b{background:var(--blue);color:#04070f;border-color:var(--blue)}
+.badge.b .d{display:none}
+.badge.ok{padding:0;color:var(--ink-3)}
+.badge.ok .d{background:var(--ok)}
+.badge.warn{padding:0;color:var(--ink-3)}
+.badge.warn .d{background:var(--warn)}
+.badge.err{padding:0;color:#f0a6a6}
+.badge.err .d{background:var(--err)}
+.badge.mute{padding:0;color:var(--ink-4)}
+.badge.mute .d{background:var(--line-3)}
+.badge.live{padding:0;color:var(--blue-2);font-weight:600}
 
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:var(--s3);
-  padding:var(--s5) var(--s6) 0}
-.tile{background:var(--panel);border:1px solid var(--line);border-radius:var(--box);
-  padding:var(--s4)}
-.tile .n{font:400 26px/1 var(--ui);color:var(--ink);letter-spacing:-.03em}
-.tile .l{font:400 12px/1.4 var(--ui);color:var(--ink-4);margin-top:6px}
-.tile.agent{border-color:var(--acc-line)}
-.tile.agent .n{color:var(--acc-ink)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  display:flex;flex-direction:column;min-height:0;min-width:0}
+.ph{display:flex;align-items:center;gap:var(--s3);padding:11px var(--s5);border-bottom:1px solid var(--line);flex:none}
+.ph .t{font:600 var(--t-title)/1 var(--ui);color:var(--ink);display:flex;align-items:center;gap:9px;
+  letter-spacing:-.012em}
+.ph .t .ic{width:14px;height:14px;color:var(--ink-4);flex:none}
+.ph .r{margin-left:auto;display:flex;align-items:center;gap:var(--s3);font:400 var(--t-micro)/1 var(--mono);
+  color:var(--ink-4)}
+.pb{padding:var(--s5);overflow:auto;min-height:0;flex:1}
 
-.grid{display:grid;grid-template-columns:1fr 1.15fr;gap:var(--s4);
-  padding:var(--s4) var(--s6) var(--s6)}
-@media (max-width:1000px){.grid{grid-template-columns:1fr}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--box);
-  padding:var(--s4);min-height:230px;display:flex;flex-direction:column}
-.card h2{font:500 12px/1 var(--ui);letter-spacing:.14em;text-transform:uppercase;
-  color:var(--ink-4);margin-bottom:var(--s3)}
-.card h2 b{color:var(--acc-ink);font-weight:500}
-.scroll{overflow-y:auto;max-height:300px}
-.full{grid-column:1/-1}
+.shell{display:flex;flex-direction:column;height:100dvh}
+.top{display:flex;align-items:center;gap:var(--s4);padding:0 var(--s5);height:56px;
+  border-bottom:1px solid var(--line);flex:none}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .nm{font:600 19px/1 var(--ui);letter-spacing:-.05em;color:var(--ink)}
+.brand .nm b{color:var(--blue-2);font-weight:600}
+.top .sep{width:1px;height:20px;background:var(--line-2)}
+.top .ctx{display:flex;align-items:baseline;gap:9px;min-width:0}
+.top .ctx .n{font:600 var(--t-ask)/1 var(--ui);color:var(--ink);letter-spacing:-.02em}
+.top .ctx .s{font:400 var(--t-micro)/1 var(--mono);color:var(--ink-4)}
+.top .right{margin-left:auto;display:flex;align-items:center;gap:var(--s4)}
+.top .right a{font-size:12.5px;color:var(--ink-3)}
+.top .right a:hover{color:var(--ink)}
+.canvas{flex:1;min-height:0;overflow:auto;padding:var(--s4) var(--s5) var(--s5);display:flex;
+  flex-direction:column;gap:var(--s4)}
+.scopebar{display:flex;align-items:flex-start;gap:var(--s4);padding:13px var(--s5);background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--r);flex:none}
+.scopebar .mk{width:1px;align-self:stretch;background:var(--line-2);flex:none}
+.scopebar p{font-size:var(--t-data);line-height:1.55;color:var(--ink-3);max-width:none}
+.scopebar p b{color:var(--ink);font-weight:600}
+.scopebar .tag{margin-left:auto;flex:none}
 
-.req{display:flex;gap:var(--s2);align-items:baseline;padding:5px var(--s2);
-  font:400 12px/1.6 var(--mono);border-bottom:1px solid var(--line);color:var(--ink-3)}
-.req:last-child{border-bottom:none}
-.req .t{color:var(--ink-4);flex:none}
-.req.agent{background:var(--acc-dim);border-left:2px solid var(--acc);
-  margin-left:-2px}
-.req .who{font:500 12px/1.6 var(--mono);color:var(--acc-ink);flex:none}
-.s-ok{color:var(--ok)}.s-warn{color:var(--warn)}.s-err{color:var(--err)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));flex:none;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{padding:var(--s4) var(--s5);display:flex;flex-direction:column;gap:var(--s3);min-width:0;
+  border-right:1px solid var(--line)}
+.kpi:last-child{border-right:none}
+@media(max-width:1100px){.kpi:nth-child(2n){border-right:none}
+  .kpi:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+.kpi .hd{display:flex;align-items:center;gap:7px;font:500 var(--t-label)/1 var(--lab);color:var(--ink-3);
+  letter-spacing:.02em}
+.kpi .hd .ic{width:13px;height:13px;color:var(--ink-4);flex:none}
+.kpi .row{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s3)}
+.kpi .n{font:600 var(--t-inst)/1 var(--ui);color:var(--ink);letter-spacing:-.035em;
+  font-variant-numeric:tabular-nums}
+.kpi .spark{display:flex;align-items:flex-end;gap:3px;height:30px}
+.kpi .spark i{width:6px;border-radius:1.5px;display:block;background:var(--blue);opacity:.85}
+.kpi .foot{font:400 var(--t-micro)/1.45 var(--mono);color:var(--ink-4)}
+.kpi.agent{background:linear-gradient(var(--blue-dim),transparent 75%)}
+.kpi.agent .n{color:var(--blue-ink)}
+.kpi.alarm{background:linear-gradient(var(--err-dim),transparent 75%)}
+.kpi.alarm .n{color:#fca5a5}
 
-table{width:100%;border-collapse:collapse;font-size:14px}
-th{text-align:left;color:var(--ink-4);font:400 12px/1 var(--mono);letter-spacing:.06em;
-  text-transform:uppercase;padding:0 var(--s2) var(--s2) var(--s2);
-  border-bottom:1px solid var(--line-2)}
-td{padding:7px var(--s2);border-bottom:1px solid var(--line);white-space:nowrap;
-  color:var(--ink-3);font-family:var(--mono);font-size:12px}
-tr:last-child td{border-bottom:none}
-td.route{color:var(--ink)}
-.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-family:var(--ui)}
-.chip .d{width:6px;height:6px;border-radius:50%;flex:none}
+.grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:var(--s4);flex:1;min-height:0}
+@media(max-width:1180px){.grid{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:var(--s4);min-height:0;min-width:0}
+
+/* the flow: five stages the simulator actually moves shipments through */
+.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;align-items:stretch}
+.st{position:relative;padding:var(--s3) var(--s4) var(--s4) 0;border:none;background:transparent;
+  margin-right:18px;min-width:0;border-left:1px solid var(--line);padding-left:var(--s4)}
+.flow .cell:last-child .st{margin-right:0}
+.cell{position:relative;min-width:0}
+.cell::after{content:"";position:absolute;right:6px;top:50%;width:6px;height:6px;margin-top:-3px;
+  border-top:1.4px solid var(--line-3);border-right:1.4px solid var(--line-3);transform:rotate(45deg)}
+.cell:last-child::after{display:none}
+.cell .link{position:absolute;right:12px;top:50%;width:12px;height:1.4px;background:var(--line-3)}
+.cell:last-child .link{display:none}
+.st .lb{font:500 var(--t-label)/1.3 var(--lab);letter-spacing:.04em;color:var(--ink-3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st .n{font:600 26px/1 var(--ui);color:var(--ink);letter-spacing:-.035em;margin-top:10px;
+  font-variant-numeric:tabular-nums}
+.st .bar{height:4px;border-radius:2px;background:var(--line);margin-top:10px;overflow:hidden}
+.st .bar i{display:block;height:100%;border-radius:2px;background:var(--blue)}
+.st.done .bar i{background:var(--ok)}
+.st.done .n{color:#6ee7b7}
+.st.move{border-left-color:var(--blue)}
+.st.move .n{color:var(--blue-ink)}
+.sideflow{display:flex;align-items:center;gap:var(--s3);margin-top:var(--s4);padding-top:var(--s4);
+  border-top:1px dashed var(--line-2)}
+.sideflow .lbl{font:500 11.5px/1 var(--ui);color:var(--ink-4)}
+.sidecard{display:flex;align-items:center;gap:var(--s3);padding:9px 0 9px var(--s4);
+  border-left:1px solid var(--line)}
+.sidecard.hot{border-left-color:var(--err)}
+.sidecard .n{font:500 17px/1 var(--mono);color:var(--ink)}
+.sidecard.hot .n{color:#fca5a5}
+.sidecard .t{font:500 12px/1 var(--ui);color:var(--ink-3)}
+.flowfoot{margin-top:var(--s5);display:flex;gap:var(--s5);flex-wrap:wrap;font:400 var(--t-data)/1.5 var(--mono);
+  color:var(--ink-4)}
+.flowfoot b{color:var(--ink-2);font-weight:500}
+
+/* fleet */
+.fleetgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  column-gap:var(--s5);row-gap:0}
+.cr{display:flex;align-items:center;gap:9px;height:28px;min-width:0;
+  border-bottom:1px solid var(--line)}
+.cr .dot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--ink-4)}
+.cr.busy .dot{background:var(--blue)}
+.cr.busy .nm{color:var(--ink);font-weight:600}
+.cr .nm{font:500 var(--t-data)/1.3 var(--ui);color:var(--ink-2);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.cr .ct{font:400 var(--t-micro)/1.3 var(--mono);color:var(--ink-4);margin-left:auto;white-space:nowrap}
+.whrow{display:flex;align-items:center;gap:var(--s3);padding:7px 0;border-bottom:1px solid var(--line)}
+.whrow:last-child{border-bottom:none}
+.whrow .c{font:500 var(--t-data)/1 var(--ui);color:var(--ink-2);width:12ch;flex:none}
+.whrow .bar{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.whrow .bar i{display:block;height:100%;border-radius:3px;background:var(--blue-2)}
+.whrow .bar i.high{background:var(--warn)}
+.whrow .v{font:400 var(--t-micro)/1 var(--mono);color:var(--ink-4);width:11ch;text-align:right;flex:none}
+.subcap{font:500 var(--t-label)/1 var(--lab);letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-4);margin:var(--s5) 0 var(--s3)}
+.subcap:first-child{margin-top:0}
+
+/* config */
+.stage{border-bottom:1px solid var(--line)}
+.stage:last-child{border-bottom:none}
+.stage .sh{display:flex;align-items:center;gap:10px;padding:12px var(--s5) 6px}
+.stage .sh .no{font:400 var(--t-micro)/1 var(--mono);color:var(--ink-4);flex:none;width:2.5ch}
+.stage .sh .nm{font:600 var(--t-title)/1 var(--ui);color:var(--ink);letter-spacing:-.012em}
+.stage .sh .st2{margin-left:auto}
+.stage .sb{padding:0 var(--s5) var(--s4);display:flex;flex-direction:column}
+.kv{display:grid;grid-template-columns:15ch minmax(0,1fr);align-items:baseline;gap:var(--s3);
+  min-height:30px;padding:6px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border-bottom:none}
+.kv .k{font:500 var(--t-label)/1.5 var(--lab);letter-spacing:.02em;color:var(--ink-4)}
+.kv .v{font:400 var(--t-data)/1.45 var(--mono);color:var(--ink);text-align:left;
+  overflow-wrap:anywhere;font-weight:500}
+.kv .v.b{color:var(--blue-ink)}.kv .v.ok{color:var(--ok)}.kv .v.mut{color:var(--ink-3)}
+
+/* activity */
+.logtabs{display:flex;gap:var(--s2);margin-left:var(--s4)}
+.logtabs button{height:26px;padding:0 10px;border-radius:var(--r-sm);color:var(--ink-3);
+  font:500 var(--t-data)/1 var(--ui)}
+.logtabs button:hover{color:var(--ink);background:var(--panel-2)}
+.logtabs button[aria-selected=true]{background:var(--panel-2);color:var(--ink);border:1px solid var(--line-2)}
+.tbl{width:100%;border-collapse:collapse}
+.tbl thead th{position:sticky;top:0;background:var(--panel);z-index:1;text-align:left;
+  font:500 var(--t-label)/1.4 var(--lab);letter-spacing:.03em;color:var(--ink-4);
+  padding:0 var(--s3) var(--s2) 0;border-bottom:1px solid var(--line-2)}
+.tbl th.r,.tbl td.r{text-align:right;padding-right:0}
+.tbl td{height:30px;padding:0 var(--s3) 0 0;font:400 var(--t-data) var(--mono);color:var(--ink-3);
+  border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td.p{color:var(--ink);font-weight:500;max-width:0;overflow:hidden;text-overflow:ellipsis}
+.tbl td.txt{white-space:normal;font-family:var(--ui);font-size:var(--t-data);color:var(--ink-2)}
+.tbl tr.agent td{background:var(--blue-dim)}
+.tbl tr:last-child td{border-bottom:none}
+.who{font:500 var(--t-label)/1 var(--lab);letter-spacing:.03em;color:var(--ink-4)}
+.who.agent{color:#04070f;background:var(--blue);font-weight:600;padding:2px 7px;border-radius:3px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2)}
+.chip .d{width:6px;height:6px;border-radius:50%;flex:none;background:var(--ink-4)}
 .st-created .d{background:var(--ink-4)}.st-picked_up .d{background:var(--warn)}
-.st-in_transit .d,.st-out_for_delivery .d{background:var(--acc)}
+.st-in_transit .d,.st-out_for_delivery .d{background:var(--blue)}
 .st-delivered .d{background:var(--ok)}.st-delayed .d{background:var(--err)}
-
-.ev{display:flex;gap:var(--s2);align-items:baseline;padding:5px var(--s2);font-size:14px;
-  border-bottom:1px solid var(--line);color:var(--ink-2)}
-.ev:last-child{border-bottom:none}
-.ev .t{font:400 12px/1.7 var(--mono);color:var(--ink-4);flex:none}
-.ev.agent{background:var(--acc-dim);border-left:2px solid var(--acc);margin-left:-2px}
-.empty-note{color:var(--ink-4);font-size:14px;padding:var(--s3) var(--s2)}
+.empty-note{padding:var(--s5);text-align:center;color:var(--ink-4);font-size:12.5px}
+@media(max-width:900px){
+  .canvas{padding:var(--s3)}
+  .top{padding:var(--s2) var(--s3);gap:var(--s2) var(--s3);height:auto;flex-wrap:wrap}
+  .top .ctx .s,.top .sep{display:none}
+  .top .right{margin-left:0;width:100%;gap:var(--s3);flex-wrap:wrap}
+  .flow{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+  .st{margin-right:0}
+  .cell::after,.cell .link{display:none}
+}
 </style>
 </head>
 <body>
-<header>
-  <span class="wm">Aero<b>Track</b></span>
-  <span class="sub">the bundled demo API · simulated logistics traffic</span>
-  <span class="live"><span class="d"></span>Live</span>
-  <span class="asof" id="asof"></span>
-  <a href="/">← doc2agent</a>
-  <a href="/demo/docs" target="_blank">API docs</a>
-</header>
-
-<div class="tiles" id="tiles" aria-live="polite"></div>
-
-<div class="grid">
-  <div class="card">
-    <h2>API requests — <b>agent calls marked</b></h2>
-    <div class="scroll" id="requests"></div>
-  </div>
-  <div class="card">
-    <h2>Shipments — latest activity</h2>
-    <div class="scroll">
-      <table>
-        <thead><tr><th>ID</th><th>Route</th><th>Status</th><th>Priority</th>
-          <th>Courier</th><th>Updated</th></tr></thead>
-        <tbody id="shipments"></tbody>
-      </table>
+<div class="shell">
+  <header class="top">
+    <a class="brand" href="/">
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+        <rect width="28" height="28" rx="7" fill="#3b82f6"/>
+        <path d="M8 9.5h7M8 13h5" stroke="#04070f" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M13 17.5h3.6c1 0 1.4-.6 1.9-1.3" stroke="#04070f" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="19.6" cy="14.6" r="2.1" fill="#04070f"/>
+      </svg>
+      <span class="nm">doc<b>2</b>agent</span>
+    </a>
+    <span class="sep"></span>
+    <div class="ctx"><span class="n">AeroTrack</span><span class="s">bundled demo API · synthetic data</span></div>
+    <span class="badge live" id="live-badge">Live</span>
+    <div class="right">
+      <span class="badge" id="asof">—</span>
+      <a href="/">Back to doc2agent</a>
+      <a href="/demo/docs" target="_blank">API docs</a>
     </div>
-  </div>
-  <div class="card full">
-    <h2>Event stream</h2>
-    <div class="scroll" id="events"></div>
+  </header>
+
+  <div class="canvas">
+    <div class="scopebar">
+      <span class="mk"></span>
+      <p><b>This monitor is wired to AeroTrack only.</b> doc2agent runs that API, so this page can show the
+        system's own traffic and mark every request the agent makes as <span class="who agent">agent</span>
+        among it. Point doc2agent at an API you run and the same panel could be wired to that instead; for any
+        third-party API, the session's own call log in doc2agent is the record of what the agent did.</p>
+      <span class="tag badge">demo scope</span>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="hd"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="5" width="8" height="6" rx="1"/><path d="M10 7h2.5L14 9v2h-4z"/></svg>In transit</div>
+        <div class="row"><span class="n" id="k-transit">0</span><span class="spark" id="k-transit-spark"></span></div>
+        <div class="foot" id="k-transit-foot">—</div>
+      </div>
+      <div class="kpi">
+        <div class="hd"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 8.5l3.2 3L13 5"/></svg>Delivered</div>
+        <div class="row"><span class="n" id="k-delivered">0</span><span class="spark" id="k-delivered-spark"></span></div>
+        <div class="foot" id="k-delivered-foot">—</div>
+      </div>
+      <div class="kpi" id="k-delay-card">
+        <div class="hd"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2.5l6 10.5H2z"/><path d="M8 6.5v3M8 11.2v.1"/></svg>Delayed</div>
+        <div class="row"><span class="n" id="k-delay">0</span><span class="badge mute" id="k-delay-badge"><span class="d"></span>clear</span></div>
+        <div class="foot" id="k-delay-foot">8% risk per in-transit tick</div>
+      </div>
+      <div class="kpi agent">
+        <div class="hd"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.5 3.5h11v8h-6l-3 2.5v-2.5h-2z"/></svg>Agent calls</div>
+        <div class="row"><span class="n" id="k-agent">0</span><span class="spark" id="k-agent-spark"></span></div>
+        <div class="foot" id="k-agent-foot">no agent traffic yet</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="col">
+        <section class="panel" style="flex:none">
+          <div class="ph">
+            <span class="t"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="3.5" cy="8" r="1.8"/><circle cx="12.5" cy="8" r="1.8"/><path d="M5.3 8h5.4"/></svg>Shipment flow</span>
+            <span class="r" id="flow-meta">—</span>
+          </div>
+          <div class="pb" id="flow"></div>
+        </section>
+
+        <section class="panel" style="flex:1;min-height:220px">
+          <div class="ph">
+            <span class="t"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg>Activity</span>
+            <div class="logtabs" id="logtabs">
+              <button data-log="events" aria-selected="true">Events</button>
+              <button data-log="requests" aria-selected="false">Requests</button>
+              <button data-log="shipments" aria-selected="false">Shipments</button>
+            </div>
+            <span class="r" id="log-meta"></span>
+          </div>
+          <div class="pb" style="padding:0 var(--s5)" id="logbody"></div>
+        </section>
+      </div>
+
+      <div class="col">
+        <section class="panel" style="flex:none">
+          <div class="ph">
+            <span class="t"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="5" r="2.2"/><path d="M3 13c0-2.4 2.2-4 5-4s5 1.6 5 4"/></svg>Fleet</span>
+            <span class="r" id="fleet-meta">—</span>
+          </div>
+          <div class="pb" id="fleet"></div>
+        </section>
+
+        <section class="panel" style="flex:1;min-height:0">
+          <div class="ph">
+            <span class="t"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2.5" y="2.5" width="11" height="11" rx="2"/><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3"/></svg>Simulator configuration</span>
+            <span class="r">from the running code</span>
+          </div>
+          <div class="pb" style="padding:0;overflow:auto" id="config"></div>
+        </section>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -136,49 +329,199 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 // backend timestamps are UTC with an offset; show them in the viewer's own time
-const hhmmss = iso => {
-  const d = new Date(iso);
-  return isNaN(d) ? (iso || "").slice(11, 19) : d.toTimeString().slice(0, 8);
-};
+const hhmmss = iso => { const d = new Date(iso);
+  return isNaN(d) ? (iso || "").slice(11, 19) : d.toTimeString().slice(0, 8); };
 
-const TILES = [
-  ["total", "Total shipments"], ["in_transit", "In transit"], ["delivered", "Delivered"],
-  ["delayed", "Delayed"], ["idle_couriers", "Idle couriers"], ["agent_calls", "Agent calls"],
+let logTab = "events";
+let latest = null;
+const hist = { transit: [], delivered: [], agent: [] };
+
+/* the simulator's real parameters, read from app/demo_data.py */
+const CONFIG = [
+  ["01", "Demo API", "fixed", [
+    ["Base path", "/demo", "mut"],
+    ["Endpoints", "11 · spec at /demo/openapi.json"],
+    ["Fleet", "8 couriers · 4 warehouses · 8 cities"]]],
+  ["02", "Simulator loop", "running", [
+    ["Tick", "every 3–7 s"],
+    ["New shipment", "22% of ticks"],
+    ["Advance", "up to 2 per tick"],
+    ["Delay risk", "8% while in transit"]]],
+  ["03", "Agent access", "gated", [
+    ["Reads", "run unrestricted", "ok"],
+    ["Writes", "held at the approval gate", "b"],
+    ["Marking", "agent requests tagged in the log", "b"]]],
 ];
+$("config").innerHTML = CONFIG.map(([no, name, badge, rows]) => {
+  const b = badge === "running" ? `<span class="badge live">running</span>`
+    : badge === "gated" ? `<span class="badge live">gated</span>`
+    : `<span class="badge">fixed</span>`;
+  return `<div class="stage"><div class="sh"><span class="no">${no}</span>
+    <span class="nm">${esc(name)}</span><span class="st2">${b}</span></div>
+    <div class="sb">${rows.map(([k, v, c]) =>
+      `<div class="kv"><span class="k">${esc(k)}</span><span class="v ${c || ""}">${esc(v)}</span></div>`).join("")}
+    </div></div>`;
+}).join("");
 
-function render(data) {
-  $("tiles").innerHTML = TILES.map(([key, label]) =>
-    `<div class="tile${key === "agent_calls" ? " agent" : ""}">
-      <div class="n">${data.stats[key] ?? 0}</div><div class="l">${label}</div></div>`).join("");
+function spark(el, series, color) {
+  const shown = series.slice(-9);
+  const max = Math.max(...shown);
+  if (!max) {                      // nothing has happened yet: a flat baseline, not stray dots
+    el.innerHTML = `<i style="height:2px;width:100%;background:var(--line-2);opacity:1"></i>`;
+    return;
+  }
+  el.innerHTML = shown.map(v =>
+    `<i style="height:${Math.max(3, Math.round(v / max * 30))}px;background:${color || "var(--blue)"}"></i>`).join("");
+}
 
-  $("requests").innerHTML = data.requests.map(r => {
-    const cls = r.status < 300 ? "s-ok" : r.status < 500 ? "s-warn" : "s-err";
-    return `<div class="req${r.caller === "agent" ? " agent" : ""}">
-      <span class="t">${hhmmss(r.time)}</span>
-      ${r.caller === "agent" ? '<span class="who">AGENT</span>' : ""}
-      <span>${esc(r.method)} ${esc(r.path)}</span>
-      <span class="${cls}">${r.status}</span></div>`;
-  }).join("") || '<div class="empty-note">No traffic yet — generate an agent and ask it something.</div>';
+/* the flow the simulator actually walks shipments through */
+const STAGES = [
+  ["created", "Created"], ["picked_up", "Picked up"], ["in_transit", "In transit"],
+  ["out_for_delivery", "Out for delivery"], ["delivered", "Delivered"],
+];
+function renderFlow(d) {
+  const by = d.by_status || {};
+  const total = d.stats.total || 0;
+  const max = Math.max(1, ...STAGES.map(([k]) => by[k] || 0));
+  $("flow-meta").textContent = `${total} shipments tracked`;
+  $("flow").innerHTML = `
+    <div class="flow">${STAGES.map(([k, label], i) => {
+      const n = by[k] || 0;
+      const cls = k === "delivered" ? "done" : (k === "in_transit" || k === "out_for_delivery") ? "move" : "";
+      return `<div class="cell"><span class="link"></span>
+        <div class="st ${cls}">
+          <div class="lb">${label}</div>
+          <div class="n">${n}</div>
+          <div class="bar"><i style="width:${n ? Math.max(6, Math.round(n / max * 100)) : 0}%"></i></div>
+        </div></div>`;
+    }).join("")}</div>
+    <div class="sideflow">
+      <span class="lbl">Side state, rejoins in transit when resolved</span>
+      <div class="sidecard${(by.delayed || 0) ? " hot" : ""}">
+        <span class="n">${by.delayed || 0}</span><span class="t">delayed</span></div>
+    </div>
+    <div class="flowfoot">
+      <span><b>${total}</b> total</span>
+      <span><b>${d.stats.delivered ?? 0}</b> delivered</span>
+      <span><b>${d.stats.in_transit ?? 0}</b> moving now</span>
+      <span><b>${d.stats.idle_couriers ?? 0}</b> couriers idle</span>
+    </div>`;
+}
 
-  $("shipments").innerHTML = data.shipments.map(s => `
-    <tr><td>${esc(s.id)}</td>
-    <td class="route">${esc(s.origin_city)} → ${esc(s.dest_city)}</td>
-    <td><span class="chip st-${esc(s.status)}"><span class="d"></span>${esc(s.status.replace(/_/g, " "))}</span></td>
-    <td>${esc(s.priority)}</td><td>${esc(s.courier_id || "—")}</td>
-    <td>${hhmmss(s.updated_at)}</td></tr>`).join("");
+function renderFleet(d) {
+  const couriers = d.couriers || [], whs = d.warehouses || [];
+  const busy = couriers.filter(c => c.status !== "idle").length;
+  $("fleet-meta").textContent = `${busy}/${couriers.length} couriers on route`;
+  $("fleet").innerHTML = `
+    <div class="subcap">Couriers</div>
+    <div class="fleetgrid">${couriers.map(c => `
+      <div class="cr${c.status !== "idle" ? " busy" : ""}">
+        <span class="dot"></span>
+        <span class="nm">${esc(c.name)}</span>
+        <span class="ct">${c.status === "idle" ? "idle" : `${c.active_shipments} live`}</span>
+      </div>`).join("")}</div>
+    <div class="subcap">Warehouse load</div>
+    ${whs.map(w => {
+      const pct = Math.round((w.packages_held / w.capacity) * 100);
+      return `<div class="whrow"><span class="c">${esc(w.city)}</span>
+        <span class="bar"><i class="${pct > 70 ? "high" : ""}" style="width:${pct}%"></i></span>
+        <span class="v">${w.packages_held}/${w.capacity}</span></div>`;
+    }).join("")}`;
+}
 
-  $("events").innerHTML = data.events.map(e =>
-    `<div class="ev${e.kind === "agent" ? " agent" : ""}">
-      <span class="t">${hhmmss(e.time)}</span><span>${esc(e.text)}</span></div>`).join("");
+function renderLog() {
+  if (!latest) return;
+  const d = latest;
+  if (logTab === "events") {
+    const rows = d.events || [];
+    $("log-meta").textContent = `${rows.length} shown`;
+    $("logbody").innerHTML = rows.length ? `<table class="tbl">
+      <thead><tr><th style="width:11ch">Time</th><th style="width:10ch">Source</th><th>Event</th></tr></thead>
+      <tbody>${rows.map(e => `<tr${e.kind === "agent" ? ' class="agent"' : ""}>
+        <td>${hhmmss(e.time)}</td>
+        <td><span class="who ${e.kind === "agent" ? "agent" : ""}">${esc(e.kind || "sim")}</span></td>
+        <td class="txt">${esc(e.text)}</td></tr>`).join("")}</tbody></table>`
+      : `<div class="empty-note">No events yet.</div>`;
+  } else if (logTab === "requests") {
+    const rows = d.requests || [];
+    $("log-meta").textContent = `${rows.length} shown`;
+    $("logbody").innerHTML = rows.length ? `<table class="tbl">
+      <thead><tr><th style="width:11ch">Time</th><th style="width:10ch">Caller</th><th style="width:9ch">Method</th>
+        <th>Path</th><th class="r" style="width:9ch">Status</th></tr></thead><tbody>${rows.map(r => {
+      const bad = r.status >= 400;
+      return `<tr${r.caller === "agent" ? ' class="agent"' : ""}>
+        <td>${hhmmss(r.time)}</td>
+        <td><span class="who ${r.caller === "agent" ? "agent" : ""}">${esc(r.caller || "sim")}</span></td>
+        <td class="m ${esc(r.method)}">${esc(r.method)}</td>
+        <td class="p">${esc(r.path)}</td>
+        <td class="r"${bad ? ' style="color:#f0a6a6"' : ""}>${r.status}</td></tr>`;
+    }).join("")}</tbody></table>`
+      : `<div class="empty-note">No HTTP traffic yet. The simulator moves shipments in process; requests appear when the agent calls the API.</div>`;
+  } else {
+    const rows = d.shipments || [];
+    $("log-meta").textContent = `${rows.length} most recently updated`;
+    $("logbody").innerHTML = rows.length ? `<table class="tbl">
+      <thead><tr><th style="width:12ch">ID</th><th>Route</th><th style="width:17ch">Status</th>
+        <th style="width:11ch">Priority</th><th style="width:10ch">Courier</th>
+        <th class="r" style="width:11ch">Updated</th></tr></thead>
+      <tbody>${rows.map(s => `<tr>
+        <td>${esc(s.id)}</td>
+        <td class="p" style="color:var(--ink)">${esc(s.origin_city)} → ${esc(s.dest_city)}</td>
+        <td><span class="chip st-${esc(s.status)}"><span class="d"></span>${esc(String(s.status).replace(/_/g, " "))}</span></td>
+        <td>${esc(s.priority)}</td><td>${esc(s.courier_id || "—")}</td>
+        <td class="r">${hhmmss(s.updated_at)}</td></tr>`).join("")}</tbody></table>`
+      : `<div class="empty-note">No shipments yet.</div>`;
+  }
+}
+$("logtabs").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  logTab = b.dataset.log;
+  document.querySelectorAll("#logtabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  renderLog();
+});
 
-  $("asof").textContent = "as of " + new Date().toTimeString().slice(0, 8);
+function render(d) {
+  latest = d;
+  const transit = d.stats.in_transit ?? 0, delivered = d.stats.delivered ?? 0;
+  const delayed = d.stats.delayed ?? 0, agent = d.stats.agent_calls ?? 0;
+  hist.transit.push(transit); hist.delivered.push(delivered); hist.agent.push(agent);
+  for (const k of Object.keys(hist)) if (hist[k].length > 30) hist[k].shift();
+
+  $("k-transit").textContent = transit;
+  spark($("k-transit-spark"), hist.transit);
+  $("k-transit-foot").textContent = `${d.stats.total ?? 0} tracked · ${d.stats.idle_couriers ?? 0} couriers idle`;
+
+  $("k-delivered").textContent = delivered;
+  spark($("k-delivered-spark"), hist.delivered, "var(--ok)");
+  const pct = d.stats.total ? Math.round(delivered / d.stats.total * 100) : 0;
+  $("k-delivered-foot").textContent = `${pct}% of everything tracked`;
+
+  $("k-delay").textContent = delayed;
+  $("k-delay-card").classList.toggle("alarm", delayed > 0);
+  $("k-delay-badge").className = "badge " + (delayed ? "err" : "mute");
+  $("k-delay-badge").innerHTML = `<span class="d"></span>${delayed ? "holding" : "clear"}`;
+
+  $("k-agent").textContent = agent;
+  spark($("k-agent-spark"), hist.agent, "var(--blue-2)");
+  const reqs = d.requests || [];
+  $("k-agent-foot").textContent = agent
+    ? `${Math.round(agent / Math.max(1, reqs.length) * 100)}% of logged requests` : "no agent traffic yet";
+
+  renderFlow(d); renderFleet(d); renderLog();
+  $("asof").textContent = `as of ${new Date().toTimeString().slice(0, 8)}`;
+  $("live-badge").className = "badge live";
+  $("live-badge").textContent = "Live";
 }
 
 async function tick() {
   try {
     const resp = await fetch("/api/monitor/feed");
-    if (resp.ok) render(await resp.json());
-  } catch (e) { /* server restarting; keep polling */ }
+    if (!resp.ok) throw new Error(resp.statusText);
+    render(await resp.json());
+  } catch {
+    $("live-badge").className = "badge warn";
+    $("live-badge").textContent = "Reconnecting";
+  }
 }
 tick();
 setInterval(tick, 2000);

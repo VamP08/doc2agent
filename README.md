@@ -2,7 +2,7 @@
 
 Point it at a REST API's documentation and it builds a working AI agent for that API on the spot. The agent makes real HTTP calls, shows every request it makes, and asks before it writes anything.
 
-Live demo: **[doc2agent.onrender.com](https://doc2agent.onrender.com)** (free hosting, so the first load after idle takes about a minute). There's a built-in demo API to try it against, and a dashboard at [/monitor](https://doc2agent.onrender.com/monitor) where you can watch the agent's calls land in real time.
+Live demo: **[doc2agent.onrender.com](https://doc2agent.onrender.com)** (free hosting, so the first load after idle takes about a minute). There's a built-in demo API to try it against, and a live monitor at [/monitor](https://doc2agent.onrender.com/monitor) where you can watch the agent's calls land among that API's own traffic.
 
 ## What it does
 
@@ -14,7 +14,7 @@ Most tool-calling demos ship with tools someone wrote by hand. Here the tools do
 
 Beyond the core loop:
 
-- Write operations (POST/PUT/PATCH/DELETE) pause the agent: the held request opens in a side rail with the full payload, and you approve (Ctrl/Cmd+Enter), deny — optionally with a reason the agent is told — or turn on auto-approve for the session.
+- Write operations (POST/PUT/PATCH/DELETE) pause the agent at an approval gate. The gate is the last stage of the pipeline panel, and it opens with the request exactly as it will be sent — method, resolved path, headers and JSON body. You approve (Ctrl/Cmd+Enter), deny — optionally with a reason the agent is told — or turn on auto-approve for the session.
 - While a write is held you can still ask read-only side questions; they run as an isolated turn so the held conversation is never touched.
 - Tool calls stream to the UI over SSE as they happen, including routing decisions and approval prompts.
 - Large APIs get routed: endpoints are clustered by the first path segment that names a resource, and a small model picks the relevant clusters per question, so a 600-endpoint API doesn't blow the context budget.
@@ -26,11 +26,11 @@ Beyond the core loop:
 
 The app ships with AeroTrack, a simulated logistics API (shipments, couriers, warehouses) with a background simulator that keeps orders flowing. Its OpenAPI spec is auto-generated, so it doubles as the test case for the deterministic ingestion path. Swagger docs are at `/demo/docs`.
 
-The demo worth doing: open `/monitor` in one window and the app in another, click "Load the built-in AeroTrack demo", then ask:
+The demo worth doing: open `/monitor` in one window and the app in another, pick **AeroTrack** on the start screen, then ask:
 
 > Create a new express shipment of 5 kg from Mumbai to Pune, find an idle courier, and assign them to it.
 
-You'll get an approval prompt for each write, and the monitor shows the agent's requests landing against the simulator's background traffic, with the new shipment appearing in the table.
+Each write stops at the gate. The monitor shows the shipment moving through the fleet while it happens, and every request the agent makes is tagged `agent` in its activity log, among the simulator's own. The monitor is wired to AeroTrack only, because that is the one API doc2agent runs; for any other API, the session's call log is the record of what the agent did.
 
 ## Running locally
 
