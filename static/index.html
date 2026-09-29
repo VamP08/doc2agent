@@ -300,6 +300,7 @@ kbd{font:400 var(--t-micro) var(--mono);padding:2px 5px;border:1px solid current
 @keyframes hold{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,.45)}50%{box-shadow:0 0 0 10px rgba(59,130,246,0)}}
 .app.holding #approve,.app.holding .gnode{animation:hold 1.8s ease-out infinite}
 @media(hover:none){#approve-kbd{display:none}}
+.app.holding .said.thinking{display:none}
 @media(prefers-reduced-motion:reduce){.chip-row.hit::before,.app.holding #approve,.app.holding .gnode{animation:none}}
 
 /* composer */
@@ -749,7 +750,7 @@ function renderOrientation() {
     `<button class="sugg" title="${esc(q)}">${esc(q)}</button>`).join("")}</div>`;
   $("hello").querySelectorAll(".sugg").forEach(b => b.onclick = () => { $("prompt").value = b.title; send(); });
 }
-function enterApp() {
+function enterApp({ focus = true } = {}) {
   $("view-start").hidden = true;
   $("view-app").hidden = false;
   $("ctx").hidden = false;
@@ -770,9 +771,9 @@ function enterApp() {
   $("top-status").className = "badge";
   $("top-status").textContent = "Agent ready";
   renderOrientation(); renderEndpoints(""); renderCounts(); renderFlow(); renderCalls();
-  $("prompt").focus();
+  if (focus) $("prompt").focus();
 }
-$("change-api").onclick = () => location.reload();
+$("change-api").onclick = () => { location.href = "/?start"; };
 renderPipelineIdle();
 
 /* the bundled demo API is genuinely running: show what it is doing right now */
@@ -945,6 +946,13 @@ function syncCnote() {
 }
 async function decide(approve) {
   if (!state.holding) return;
+  if (replay.active) {
+    $("approve").disabled = $("deny").disabled = true;
+    const reason = replay.data.deny_reason;
+    if (!approve && $("deny-reason")) $("deny-reason").value = reason;
+    playEvents(replay.data.branches[approve ? "approve" : "deny"], () => { replay.active = false; });
+    return;
+  }
   const { approval_id } = state.holding;
   const reason = ($("deny-reason") || {}).value ? $("deny-reason").value.trim() : "";
   $("approve").disabled = $("deny").disabled = true;
@@ -962,6 +970,11 @@ document.addEventListener("keydown", e => {
 /* ── send ── */
 async function send() {
   const text = $("prompt").value.trim();
+  if (/^https?:\/\/\S+$/i.test(text)) { location.href = "/?url=" + encodeURIComponent(text); return; }
+  if (text && !state.sessionId && state.live) {
+    $("cnote").textContent = "Starting a live session…";
+    await state.live; syncCnote();
+  }
   if (!text || !state.sessionId) return;
   if (state.holding) return sendAside(text);
   if (state.streaming) return;
@@ -1042,11 +1055,58 @@ async function sendAside(text) {
   } catch (e) { turn.say(e.message, "error"); }
   finally { $("prompt").focus(); }
 }
+/* ── first load: a recorded AeroTrack run, played through handleEvent ── */
+function playEvents(events, done) {
+  let t = 0, prev = 0;
+  const seq = events.map(({ t: at, ev }) => { t += Math.min(at - prev, 900); prev = at; return { t, ev }; });
+  if (reducedMotion()) { seq.forEach(({ ev }) => handleEvent(ev, replay.turn)); if (done) done(); return; }
+  seq.forEach(({ t: at, ev }, i) => replay.timers.push(setTimeout(() => {
+    if (!replay.turn) return;
+    handleEvent(ev, replay.turn);
+    if (i === seq.length - 1 && done) done();
+  }, at + 1200)));
+}
+async function startReplay() {
+  let data;
+  try { const r = await fetch("/static/replay.json", { cache: "no-cache" }); if (!r.ok) return; data = await r.json(); }
+  catch { return; }                                // no recording: the start screen stays
+  replay.data = data; replay.active = true;
+  const ing = data.ingest;
+  Object.assign(state, { sessionId: null, baseUrl: location.origin + ing.base_url, endpoints: ing.endpoints,
+    source: ing.source === "openapi" ? "parsed spec" : "LLM-extracted", apiTitle: ing.api_title,
+    apiDescription: ing.api_description, presetKey: "aerotrack", host: location.host,
+    basePath: location.host + ing.base_url });
+  enterApp({ focus: false });
+  $("nav-mcp").removeAttribute("href");            // nothing to export until a live session exists
+  $("replay-badge").hidden = $("replay-again").hidden = false;
+  $("replay-badge").title = "Recorded " + new Date(data.recorded_at).toLocaleString();
+  replay.turn = addTurn(data.prompt);
+  playEvents(data.prefix);
+}
+function stopReplay() {
+  if (!replay.turn) return;
+  replay.active = false; replay.turn = null;
+  replay.timers.forEach(clearTimeout); replay.timers = [];
+  if (state.holding) closeRail();
+  Object.assign(state, { calls: [], heldTotal: 0, routedTo: null });
+  $("thread").innerHTML = '<div class="turn orient" id="hello"></div>';
+  $("replay-badge").hidden = $("replay-again").hidden = true;
+  renderCalls(); renderCounts(); renderFlow();
+  state.presetKey = "aerotrack";
+  state.live = ingest(PRESETS[0].url());          // a real session behind the same screen
+}
+$("replay-again").onclick = () => location.reload();
+$("prompt").addEventListener("focus", stopReplay);
+document.querySelectorAll(".ni[data-view]").forEach(b => b.addEventListener("click", stopReplay));
+
 $("send").onclick = send;
 $("prompt").addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.metaKey && !e.ctrlKey) { e.preventDefault(); send(); }
 });
 syncCnote();
+const boot = new URLSearchParams(location.search);
+if (boot.has("url")) { $("url").value = boot.get("url"); ingest(boot.get("url")); }
+else if (!boot.has("start")) startReplay();
 </script>
 </body>
 </html>
