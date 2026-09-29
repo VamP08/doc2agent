@@ -55,6 +55,7 @@ class ToolCallTrace(BaseModel):
     status: Optional[int] = None
     ok: bool = True
     summary: str = ""
+    count: Optional[int] = None
 
 
 class ChatResponse(BaseModel):

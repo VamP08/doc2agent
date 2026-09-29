@@ -55,6 +55,17 @@ def build_toolset(endpoints: list[Endpoint]) -> tuple[list[dict], dict[str, Endp
     return schemas, registry
 
 
+def result_count(data) -> int | None:
+    """How many items a response returned: the top-level list, or the first list in an object."""
+    if isinstance(data, list):
+        return len(data)
+    if isinstance(data, dict):
+        for value in data.values():
+            if isinstance(value, list):
+                return len(value)
+    return None
+
+
 def execute_endpoint(
     endpoint: Endpoint,
     args: dict,
@@ -105,6 +116,10 @@ def execute_endpoint(
         trace.ok = resp.is_success
         text = resp.text[:MAX_RESPONSE_CHARS]
         trace.summary = f"HTTP {resp.status_code}, {len(resp.text)} chars"
+        try:
+            trace.count = result_count(resp.json())
+        except ValueError:
+            pass
         result = {"status": resp.status_code, "body": text}
     except Exception as exc:
         trace.ok = False

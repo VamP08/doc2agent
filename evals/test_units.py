@@ -116,3 +116,19 @@ def test_session_roundtrip():
     assert restored.endpoints[0].path == "/pets/{petId}"
     assert restored.messages == session.messages
     assert restored.api_key == "k"
+
+
+from app.tools import result_count  # noqa: E402
+
+
+def test_result_count_top_level_list():
+    assert result_count([1, 2, 3]) == 3
+
+
+def test_result_count_first_list_in_object():
+    assert result_count({"count": 3, "shipments": [{}, {}, {}]}) == 3
+
+
+def test_result_count_none_without_a_list():
+    assert result_count({"id": "SHP-1"}) is None
+    assert result_count("plain text") is None
