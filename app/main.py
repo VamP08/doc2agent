@@ -257,5 +257,10 @@ def monitor() -> FileResponse:
     return FileResponse(STATIC_DIR / "monitor.html")
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon() -> FileResponse:
+    return FileResponse(STATIC_DIR / "favicon.ico", media_type="image/x-icon")
+
+
 app.mount("/demo", demo_app)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
