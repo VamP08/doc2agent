@@ -153,48 +153,47 @@ kbd{font:400 var(--t-micro) var(--mono);padding:2px 5px;border:1px solid current
 .canvas{flex:1;min-height:0;overflow:hidden;padding:var(--s4) var(--s5) var(--s5);display:flex;
   flex-direction:column;gap:var(--s4)}
 
-/* KPI row */
-.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));flex:none;background:var(--panel);
-  border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-@media(max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.kpi{padding:var(--s3) var(--s5);display:flex;flex-direction:column;gap:7px;min-width:0;
-  border-right:1px solid var(--line)}
-.kpi:last-child{border-right:none}
-@media(max-width:1100px){.kpi:nth-child(2n){border-right:none}
-  .kpi:nth-child(-n+2){border-bottom:1px solid var(--line)}}
-.kpi .hd{display:flex;align-items:center;gap:7px;font:500 var(--t-label)/1 var(--lab);color:var(--ink-3);
-  letter-spacing:.02em}
-.kpi .hd .ic{width:13px;height:13px;color:var(--ink-4);flex:none}
-.kpi .row{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s3)}
-.kpi .n{font:600 var(--t-inst)/1 var(--ui);color:var(--ink);letter-spacing:-.035em;
-  font-variant-numeric:tabular-nums}
-.kpi .n small{font:500 12px/1 var(--ui);color:var(--ink-4);margin-left:5px;letter-spacing:0}
-.kpi .spark{display:flex;align-items:flex-end;gap:3px;height:22px}
-.kpi .spark i{width:6px;border-radius:1.5px;display:block;background:var(--blue);opacity:.85}
-.kpi .foot{font:400 var(--t-micro)/1.45 var(--mono);color:var(--ink-4)}
-.kpi.hot{background:linear-gradient(var(--blue-dim),transparent 75%)}
-.app.holding .kpi .n{font-size:var(--t-ask)}
-.app.holding .kpi .spark{height:18px}
-.app.holding .gatebody h3{font-size:var(--t-inst);line-height:1.05}
-.kpi.hot .n{color:var(--blue-ink)}
-
-/* main split */
-.split{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:var(--s4);flex:1;min-height:0}
-@media(max-width:1240px){.split{grid-template-columns:minmax(0,1fr)}}
+/* session page: a session column and a flow column */
+#view-app{padding:0;gap:0}
+#calls-panel,#endpoints-panel{margin:var(--s4) var(--s5) var(--s5)}
+.split.d{display:grid;grid-template-columns:minmax(0,1fr) 420px;flex:1;min-height:0}
+@media(max-width:1180px){.split.d{grid-template-columns:minmax(0,1fr) 340px}}
+.sess{display:flex;flex-direction:column;min-height:0;min-width:0;padding:var(--s6) 40px var(--s5)}
+.sess-top{display:flex;gap:var(--s3);align-items:center;min-height:26px;flex:none;margin-bottom:18px}
+.sess-top:not(:has(> :not([hidden]))){display:none}
+.pill{display:inline-flex;gap:8px;align-items:center;font:500 12px/1 var(--mono);color:var(--ink-2);
+  border:1px solid var(--line-2);padding:6px 11px;border-radius:99px}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--blue)}
+.linkbtn{font:500 12px/1 var(--mono);color:var(--ink-4)}
+.linkbtn:hover{color:var(--ink)}
+.hero{display:flex;align-items:flex-end;gap:18px;margin:0 0 24px;flex:none}
+.hero .n{font:700 72px/.9 var(--ui);color:var(--blue);letter-spacing:-.03em}
+.hero .hcap{font:400 16px/1.45 var(--ui);color:var(--ink-2);padding-bottom:6px;max-width:34ch}
 
 /* conversation */
-.thread{padding:var(--s5) var(--s6);overflow:auto;flex:1;min-height:0;
+.thread{overflow:auto;flex:1;min-height:0;padding-bottom:24px;
   -webkit-mask-image:linear-gradient(#000 calc(100% - 18px),transparent);
   mask-image:linear-gradient(#000 calc(100% - 18px),transparent)}
-.turn{padding:var(--s5) 0}
-.turn:first-child{padding-top:0}
-.turn+.turn{border-top:1px solid var(--line)}
+.turn{padding:0 0 var(--s6)}
+.turn+.turn{border-top:1px solid var(--line);padding-top:var(--s6)}
 .turn .side-tag{display:inline-flex;margin-bottom:var(--s2)}
-.ask{display:flex;gap:12px;align-items:flex-start;font:600 var(--t-ask)/1.4 var(--ui);color:var(--ink);
-  max-width:66ch;overflow-wrap:anywhere;letter-spacing:-.015em}
-.ask .who{width:22px;height:22px;border-radius:var(--r-xs);background:var(--panel-2);border:1px solid var(--line-2);
-  display:grid;place-items:center;font:600 11.5px/1 var(--ui);color:var(--ink-3);flex:none;margin-top:1px}
-.said{font-size:var(--t-ans);line-height:1.72;color:var(--ink-2);max-width:74ch;margin-top:var(--s4);
+.ask{font:500 21px/1.35 var(--ui);color:var(--ink);max-width:60ch;overflow-wrap:anywhere;
+  letter-spacing:-.012em;margin-bottom:6px}
+.call{display:grid;grid-template-columns:6ch minmax(0,1fr) auto;gap:10px;align-items:center;padding-top:12px;
+  font:400 var(--t-data)/1.4 var(--mono);color:var(--ink-2)}
+.call .p{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.call .p i{color:var(--ink-4);font-style:normal}
+.call .st{color:var(--ok)}
+.call .st.bad{color:var(--err)}
+.got{font:400 15px/1.4 var(--ui);color:var(--ink);padding:5px 0 2px 68px}
+.held{margin-top:40px;border-top:1px solid var(--line);padding-top:24px;display:flex;flex-direction:column;gap:16px}
+.held .lbl{font:600 11px/1 var(--lab);letter-spacing:.08em;text-transform:uppercase;color:var(--blue-2)}
+.held .big{font:500 40px/1.12 var(--mono);color:var(--ink);letter-spacing:-.02em;overflow-wrap:anywhere}
+.held .acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.held .acts input{flex:1;min-width:180px;height:34px;border-bottom:1px solid var(--line-2);
+  font:400 var(--t-data) var(--ui)}
+.held .acts input:focus{border-bottom-color:var(--blue)}
+.said{font-size:var(--t-ans);line-height:1.72;color:var(--ink-2);max-width:74ch;margin-top:var(--s5);
   overflow-wrap:anywhere}
 .said.thinking{color:var(--ink-4);display:flex;align-items:center;gap:8px}
 .said.thinking::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--blue);
@@ -215,14 +214,9 @@ kbd{font:400 var(--t-micro) var(--mono);padding:2px 5px;border:1px solid current
 .said th{text-align:left;font:600 11px/1.4 var(--ui);color:var(--ink-4);padding:5px 12px 5px 0;
   border-bottom:1px solid var(--line-2)}
 .said td{padding:5px 12px 5px 0;border-bottom:1px solid var(--line);color:var(--ink-2);vertical-align:top}
-.evline{margin-top:var(--s3);font:400 var(--t-micro)/1.5 var(--mono);color:var(--ink-4)}
-.orient .ask{font-size:var(--t-ask)}
-.orient .apidesc{font-size:var(--t-ans);line-height:1.65;color:var(--ink-2);max-width:70ch;
-  margin-top:var(--s3)}
-.orient .cap{font:500 var(--t-label)/1 var(--lab);letter-spacing:.06em;text-transform:uppercase;
-  color:var(--ink-4);margin:var(--s5) 0 var(--s2)}
+.orient{padding-bottom:var(--s4)}
 .suggs{display:flex;flex-direction:column;align-items:stretch;max-width:70ch}
-.sugg{display:flex;align-items:center;gap:10px;height:32px;padding:0;color:var(--ink-2);
+.sugg{display:flex;align-items:center;gap:10px;height:34px;padding:0;color:var(--ink-2);
   font:400 var(--t-ans)/1 var(--ui);text-align:left;border-bottom:1px solid var(--line);width:100%;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sugg::before{content:">";font:500 12px/1 var(--mono);color:var(--ink-4);flex:none}
@@ -264,61 +258,57 @@ kbd{font:400 var(--t-micro) var(--mono);padding:2px 5px;border:1px solid current
 .kv .v.b{color:var(--blue-ink)}
 .kv .v.ok{color:var(--ok)}
 .kv .v.mut{color:var(--ink-3)}
-.stage.gate.armed{background:linear-gradient(var(--blue-dim),transparent 60%)}
-#pipeline.holding{display:flex;flex-direction:column;min-height:0}
-#pipeline.holding .stage.gate{display:flex;flex-direction:column;min-height:0;flex:1}
-#pipeline.holding .gatebody{overflow:auto;min-height:0;flex:1;
-  -webkit-mask-image:linear-gradient(#000 calc(100% - 20px),transparent);
-  mask-image:linear-gradient(#000 calc(100% - 20px),transparent)}
-#pipeline.holding .gate-foot{flex:none;padding:var(--s4) var(--s5) var(--s5);
-  border-top:1px solid var(--line);background:var(--panel)}
-#pipeline.holding .stage:not(.gate) .sb{display:none}
-#pipeline.holding .stage:not(.gate) .sh{padding:8px var(--s5);position:sticky;top:0;
-  background:var(--panel);z-index:2}
-#pipeline.holding .stage:not(.gate) .sh .nm{color:var(--ink-3);font-weight:500}
-.gatebody{padding:0 var(--s5) var(--s5)}
-.gatebody h3{font:600 22px/1.2 var(--ui);color:var(--ink);letter-spacing:-.025em;overflow-wrap:anywhere;
-  margin-top:2px}
-.gatebody .sub{font-size:var(--t-data);color:var(--ink-3);margin-top:5px}
-.gatebody .tool{margin-top:var(--s3);padding:9px 0;border-top:1px solid var(--line);
-  border-bottom:1px solid var(--line)}
-.gatebody .tool .k{font:500 var(--t-label)/1 var(--lab);letter-spacing:.06em;text-transform:uppercase;
-  color:var(--ink-4)}
-.gatebody .tool .n{font:500 var(--t-data)/1.5 var(--mono);color:var(--ink);margin-top:6px;
-  word-break:break-all}
-.gatebody .tool .f{font:400 var(--t-micro)/1.5 var(--mono);color:var(--ink-4);margin-top:3px;
-  word-break:break-all}
 .cap{font:500 var(--t-label)/1 var(--lab);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-4);
   margin:var(--s5) 0 var(--s2);display:block}
-.argrid{display:block}
-.argrid .kv{height:28px}
+
+/* flow column: the spec, the tools it became, the gate */
+.flow{border-left:1px solid var(--line);padding:var(--s6) 26px;display:grid;
+  grid-template-columns:118px minmax(0,1fr);gap:0 20px;align-content:center;overflow:auto;min-height:0}
+.flow .src{align-self:center;border:1px solid var(--line);border-radius:var(--r);padding:12px;
+  background:var(--panel);position:relative}
+.flow .src::after{content:"";position:absolute;right:-21px;top:50%;width:20px;border-top:1px dashed var(--ink-4)}
+.flow .lbl{font:600 11px/1 var(--lab);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4)}
+.flow .src .nm{color:var(--ink);font:500 12px/1.3 var(--mono);margin-top:7px;word-break:break-all}
+.flow .src .s{font-size:12px;line-height:1.35;color:var(--ink-3);margin-top:5px}
+.chip-row{position:relative;min-width:0}
+.chip-row::before{content:"";position:absolute;left:-13px;top:50%;width:12px;border-top:1px solid var(--line);
+  transform-origin:left}
+.chip-row.hit::before{border-top-color:var(--blue);animation:draw .4s ease-out}
+@keyframes draw{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.chip{font:400 12px/1.2 var(--mono);padding:6px 9px;margin:3px 0;border:1px solid var(--line);
+  border-radius:var(--r-sm);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:opacity .3s,border-color .3s,background-color .3s,color .3s}
+.chip b{font-weight:700;margin-right:7px}
+.chip.more{color:var(--ink-4);border-style:dashed}
+.flow.calling .chip:not(.hit){opacity:.35}
+.chip.hit{color:var(--ink);border-color:var(--blue);background:rgba(59,130,246,.08)}
+.gnode{grid-column:1/-1;margin-top:20px;border:1px solid var(--blue-line);border-radius:var(--r);
+  padding:13px 16px;background:var(--blue-dim);display:flex;flex-direction:column;align-items:flex-start;
+  gap:6px;font:400 13px/1.35 var(--mono);color:var(--ink);width:100%;min-width:0;text-align:left;overflow-wrap:anywhere}
+.gnode:hover{border-color:var(--blue)}
+.gnode .go{color:var(--blue-2);white-space:nowrap}
+.gdetail{grid-column:1/-1;margin-top:10px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--panel);padding:14px 16px}
+.gdetail .wire{margin-top:10px}
 .wire{font:400 12px/1.65 var(--mono);color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;
-  background:var(--sunk);border-left:1px solid var(--line-2);padding:10px 0 10px 12px;max-height:190px;
+  background:var(--sunk);border-left:1px solid var(--line-2);padding:10px 0 10px 12px;max-height:220px;
   overflow:auto}
 .wire .h{color:var(--ink-3)}.wire .q{color:var(--ink-3)}.wire .none{color:var(--ink-4)}
-.gate-acts{display:flex;gap:var(--s3);margin-top:var(--s4);flex-wrap:wrap;align-items:center}
-.why{margin-top:var(--s3)}
-.why input{width:100%;height:30px;padding:0;background:none;border:none;
-  border-bottom:1px solid var(--line-2);font:400 var(--t-data) var(--ui)}
-.why input:focus{border-bottom-color:var(--blue)}
-.why .note{font-size:var(--t-label);font-family:var(--lab);color:var(--ink-4);margin-top:7px}
-.autorow{display:flex;align-items:flex-start;gap:9px;margin-top:var(--s3);padding-top:var(--s3);
-  border-top:1px solid var(--line);cursor:pointer}
-.autorow input{margin-top:2px;accent-color:var(--blue);width:13px;height:13px;flex:none}
-.autorow .t{font:500 var(--t-data)/1.35 var(--ui);color:var(--ink-2)}
-.autorow .s{display:block;font-size:12px;color:var(--ink-4);margin-top:2px}
-.gate-idle{padding:var(--s5) var(--s4) var(--s6);text-align:center;color:var(--ink-4);font-size:12px}
-.gate-idle .big{display:block;font:600 12.5px/1.4 var(--ui);color:var(--ink-3);margin-bottom:4px}
+.autorow{display:flex;align-items:center;gap:9px;margin-top:var(--s3);cursor:pointer;
+  font:500 var(--t-data)/1.35 var(--ui);color:var(--ink-3)}
+.autorow input{accent-color:var(--blue);width:13px;height:13px;flex:none}
+@keyframes hold{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,.45)}50%{box-shadow:0 0 0 10px rgba(59,130,246,0)}}
+.app.holding #approve,.app.holding .gnode{animation:hold 1.8s ease-out infinite}
+@media(hover:none){#approve-kbd{display:none}}
+@media(prefers-reduced-motion:reduce){.chip-row.hit::before,.app.holding #approve,.app.holding .gnode{animation:none}}
 
 /* composer */
-.composer{flex:none;padding:var(--s4) var(--s6) var(--s5);border-top:1px solid var(--line)}
-.box{display:flex;align-items:center;gap:var(--s3);height:44px;padding:0;
-  border-bottom:1px solid var(--line-2)}
-.box::before{content:">";font:500 16px/1 var(--mono);color:var(--ink-4);flex:none}
-.box:focus-within{border-bottom-color:var(--blue)}
-.box:focus-within::before{color:var(--blue-2)}
+.composer{flex:none;margin-top:var(--s4)}
+.box{display:flex;align-items:center;gap:var(--s3);min-height:52px;padding:4px 6px 4px 18px;
+  border:1px solid var(--blue-line);border-radius:var(--r);background:var(--panel)}
+.box:focus-within{border-color:var(--blue)}
 .box input{flex:1;font:400 16px var(--ui)}
-.box input::placeholder{color:var(--ink-4)}
+.box input::placeholder{color:var(--ink-3)}
 .send{height:24px;padding:0 10px;border-radius:var(--r-xs);background:none;color:var(--ink-3);
   font:500 12px/1 var(--ui)}
 .send:hover:not(:disabled){color:var(--ink);background:var(--panel-2)}
@@ -382,7 +372,14 @@ kbd{font:400 var(--t-micro) var(--mono);padding:2px 5px;border:1px solid current
   .app{grid-template-columns:1fr}
   .rail{display:none}
   .canvas{padding:var(--s3)}
-  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #view-app{overflow:auto}
+  .split.d{display:block;flex:none}
+  .sess{display:block;padding:var(--s5) var(--s4)}
+  .crumb .mono,.crumb .sep{display:none}
+  .thread{overflow:visible;-webkit-mask-image:none;mask-image:none}
+  .flow{border-left:0;border-top:1px solid var(--line);align-content:start;padding:var(--s5) var(--s4)}
+  .hero .n{font-size:56px}
+  .held .big{font-size:24px}
 }
 </style>
 </head>
@@ -471,51 +468,25 @@ kbd{font:400 var(--t-micro) var(--mono);padding:2px 5px;border:1px solid current
 
     <!-- console -->
     <div class="canvas" id="view-app" hidden>
-      <div class="kpis">
-        <div class="kpi">
-          <div class="hd"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/></svg>Endpoints ingested</div>
-          <div class="row"><span class="n" id="kpi-eps">0</span><span class="spark" id="kpi-eps-spark"></span></div>
-          <div class="foot" id="kpi-eps-foot">—</div>
-        </div>
-        <div class="kpi">
-          <div class="hd"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 2.5H3.5v11h9V6"/><path d="M9 2.5h3.5V6"/></svg>Tools generated</div>
-          <div class="row"><span class="n" id="kpi-tools">0</span></div>
-          <div class="foot" id="kpi-tools-foot">—</div>
-        </div>
-        <div class="kpi">
-          <div class="hd"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 8h3l2-4 2 8 2-4h3"/></svg>Calls this session</div>
-          <div class="row"><span class="n" id="kpi-calls">0</span><span class="spark" id="kpi-calls-spark"></span></div>
-          <div class="foot" id="kpi-calls-foot">no calls yet</div>
-        </div>
-        <div class="kpi" id="kpi-held-card">
-          <div class="hd"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3.5" y="7" width="9" height="6" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2"/></svg>Writes held</div>
-          <div class="row"><span class="n" id="kpi-held">0</span><span class="badge mute" id="kpi-held-badge"><span class="d"></span>gate armed</span></div>
-          <div class="foot" id="kpi-held-foot">nothing waiting</div>
-        </div>
-      </div>
-
-      <div class="split" id="split">
-        <section class="panel" id="session-panel">
-          <div class="ph">
-            <span class="t">Session</span>
-            <span class="r" id="session-meta"></span>
+      <div class="split d" id="split">
+        <section class="sess" id="session-panel">
+          <div class="sess-top">
+            <span class="pill" id="replay-badge" hidden><i></i>replay · real run</span>
+            <button class="linkbtn" id="replay-again" hidden>↻ replay</button>
           </div>
+          <div class="hero" id="hero"><span class="n" id="hero-count">0</span><span class="hcap" id="hero-cap"></span></div>
           <div class="thread" id="thread" role="log" aria-label="Conversation">
             <div class="turn orient" id="hello"></div>
           </div>
           <div class="composer" id="composer">
             <div class="box">
-              <input id="prompt" placeholder="Ask the agent…" aria-label="Ask the agent">
+              <input id="prompt" placeholder="Ask the agent, or paste another docs URL" aria-label="Ask the agent">
               <button class="send" id="send">Send</button>
             </div>
             <div class="cnote" id="cnote">Reads run on their own. Writes stop for your approval.</div>
           </div>
         </section>
-
-        <section class="panel" id="pipeline-panel">
-          <div class="ph"><span class="t">Pipeline</span><span class="r" id="pipe-meta"></span></div>
-          <div class="pb" style="padding:0" id="pipeline"></div>
-        </section>
+        <aside class="flow" id="flow" aria-label="Tools built from the spec"></aside>
       </div>
 
       <section class="panel" id="calls-panel" hidden style="flex:1;min-height:0">
@@ -561,8 +532,9 @@ const state = {
   apiTitle: "", apiDescription: "", presetKey: null,
   keyLast4: "", authHeader: "Authorization",
   autoApprove: false, holding: null, heldTimer: null, streaming: false,
-  calls: [], heldTotal: 0, routedTo: null,
+  calls: [], heldTotal: 0, routedTo: null, holdTurn: null,
 };
+const replay = { data: null, timers: [], turn: null, active: false };
 
 const PRESETS = [
   { key: "aerotrack", name: "AeroTrack", tag: "built-in demo",
@@ -638,138 +610,55 @@ function renderPipelineIdle() {
       ["Writes", "held for a human"],
       ["Denial", "reason is fed to the agent"]], "gate");
 }
-function renderPipeline() {
-  const reads = state.endpoints.filter(e => !isWrite(e.method)).length;
-  const writes = state.endpoints.length - reads;
-  const routed = state.endpoints.length > MAX_TOOLS;
-  const ok = `<span class="badge ok"><span class="d"></span>done</span>`;
-  const live = state.calls.length
-    ? `<span class="badge ok"><span class="d"></span>live</span>`
-    : `<span class="badge">idle</span>`;
-  const armed = state.holding
-    ? `<span class="badge b"><span class="d"></span>holding</span>`
-    : state.autoApprove ? `<span class="badge warn"><span class="d"></span>auto</span>`
-    : `<span class="badge ok"><span class="d"></span>armed</span>`;
-
-  const head =
-    stageHtml("01", "Ingest", ok, [
-      ["Source", esc(state.source), "ok"],
-      ["Base URL", esc(state.basePath)],
-      ["Endpoints found", String(state.endpoints.length)]]) +
-    stageHtml("02", "Tool synthesis", ok, [
-      ["Tools generated", String(state.endpoints.length)],
-      ["Reads / writes", `${reads} / ${writes}`],
-      ["Router", routed
-        ? `active <span class="mut">(over ${MAX_TOOLS})</span>`
-        : `<span class="mut">off, under the ${MAX_TOOLS} cap</span>`, routed ? "b" : ""]]) +
-    stageHtml("03", "Execution", live, [
-      ["Auth header", state.keyLast4
-        ? `${esc(state.authHeader)} ••••${esc(state.keyLast4)}` : `<span class="mut">none sent</span>`],
-      ["Calls made", String(state.calls.length)],
-      ["Last status", state.calls.length
-        ? esc(state.calls[state.calls.length - 1].status) : `<span class="mut">—</span>`,
-        state.calls.length && state.calls[state.calls.length - 1].bad ? "" : "ok"]]) ;
-
-  let gate;
+/* ── flow column: the spec, the tools it became, and the gate ── */
+const tplOf = ep => ep.method + " " + ep.path;
+function renderFlow() {
+  const hit = new Set(state.calls.map(c => c.tpl).filter(Boolean));
+  const shown = state.endpoints.slice(0, MAX_TOOLS);   // large specs: the routed view comes later
+  const more = state.endpoints.length - shown.length;
+  const rows = shown.length + (more > 0 ? 1 : 0);
+  const src = state.source === "parsed spec" ? "parsed directly, no model" : "extracted by the model";
+  const srcName = state.presetKey === "aerotrack" ? "openapi.json" : state.host;
+  let html = `<div class="src" style="grid-row:1/span ${Math.max(1, rows)}"><div class="lbl">source</div>
+      <div class="nm">${esc(srcName)}</div><div class="s">${src}</div></div>` +
+    shown.map(ep => { const on = hit.has(tplOf(ep)) ? " hit" : "";
+      return `<div class="chip-row${on}"><div class="chip${on}" title="${esc(ep.description || ep.path)}"><b
+        style="color:${METHOD_COLOR[ep.method] || "var(--ink-3)"}">${esc(ep.method)}</b>${esc(ep.path.replace(/\{[^}]+\}/g, "{…}"))}</div></div>`; }).join("") +
+    (more > 0 ? `<div class="chip-row"><div class="chip more">+${more} more, routed per question</div></div>` : "");
   if (state.holding) {
-    const { html, path, ep } = wireRequest(state.holding);
-    const args = state.holding.args || {};
-    gate = `<div class="stage gate armed">
-      <div class="sh"><span class="no">04</span><span class="nm">Approval gate</span><span class="st">${armed}</span></div>
-      <div class="gatebody">
-        <h3>${esc(state.holding.method)} ${esc(path)}</h3>
-        <div class="sub">Nothing has been sent yet. <span id="held-age"></span></div>
-        <div class="tool">
-          <div class="k">Tool generated from the spec</div>
-          <div class="n">${esc(state.holding.tool || "")}</div>
-          <div class="f">from ${esc(state.holding.method)} ${esc(state.holding.path)}</div>
-        </div>
-        ${Object.keys(args).length ? `<span class="cap">Arguments</span>
-          <div class="argrid">${Object.entries(args).map(([k, v]) => {
-            const s = v == null ? "null" : typeof v === "object" ? JSON.stringify(v) : String(v);
-            return `<div class="kv"><span class="k">${esc(k)}</span><span class="v">${esc(s)}</span></div>`;
-          }).join("")}</div>` : ""}
-        <span class="cap">Request as it will be sent</span>
-        <pre class="wire">${html}</pre>
+    const { html: wire } = wireRequest(state.holding);
+    html += `<button class="gnode" id="gnode" aria-expanded="false" aria-controls="gdetail">
+        <span>${esc(state.holding.method)} ${esc(state.holding.path)}</span><span class="go">● held · view request ▸</span></button>
+      <div class="gdetail" id="gdetail" hidden>
+        <div class="lbl">Request as it will be sent</div><pre class="wire">${wire}</pre>
         <label class="autorow"><input type="checkbox" id="autoapprove" ${state.autoApprove ? "checked" : ""}>
-          <span><span class="t">Auto-approve writes this session</span>
-          <span class="s">Every write runs without stopping here, until you reload.</span></span></label>
-      </div>
-      <div class="gate-foot">
-        <div class="gate-acts">
-          <button class="btn btn-p" id="approve">Approve <kbd id="approve-kbd">Ctrl&#9166;</kbd></button>
-          <button class="btn btn-s" id="deny">Deny</button>
-        </div>
-        <div class="why"><input id="deny-reason" placeholder="Why? (optional — the agent is told)"
-            aria-label="Reason for denying">
-          <div class="note">Denying ends this request only. You can ask again.</div></div>
-      </div></div>`;
-  } else {
-    gate = `<div class="stage gate">
-      <div class="sh"><span class="no">04</span><span class="nm">Approval gate</span><span class="st">${armed}</span></div>
-      <div class="sb">
-        <div class="kv"><span class="k">Reads</span><span class="v ok">run without stopping</span></div>
-        <div class="kv"><span class="k">Writes</span><span class="v ${state.autoApprove ? "" : "b"}">${
-          state.autoApprove ? "auto-approved this session" : "held for your decision"}</span></div>
-        <div class="kv"><span class="k">Held so far</span><span class="v">${state.heldTotal}</span></div>
-      </div>
-      <div class="gate-idle"><span class="big">Nothing is waiting.</span>
-        The gate opens here the moment the agent proposes a write.</div></div>`;
+          Auto-approve writes this session</label></div>`;
   }
-  $("pipeline").innerHTML = head + gate;
-  $("pipeline").classList.toggle("holding", !!state.holding);
+  $("flow").innerHTML = html;
+  $("flow").classList.toggle("calling", hit.size > 0);
   if (state.holding) {
-    bindGate();
-    const g = $("pipeline").querySelector(".stage.gate");
-    if (g) g.scrollIntoView({ block: "nearest" });
-  } else {
-    $("pipeline").scrollTop = 0;      // released: the panel reads from stage one again
+    $("gnode").onclick = () => { const d = $("gdetail"); d.hidden = !d.hidden;
+      $("gnode").setAttribute("aria-expanded", String(!d.hidden)); };
+    $("autoapprove").onchange = e => { state.autoApprove = e.target.checked; syncCnote(); };
   }
-  $("pipe-meta").textContent = state.holding ? "1 held" : "4 stages";
+}
+const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+function countUp(el, n) {
+  if (reducedMotion() || n < 2) { el.textContent = n; return; }
+  let i = 0; const step = () => { el.textContent = ++i; if (i < n) setTimeout(step, Math.max(16, 700 / n)); };
+  step();
 }
 
-/* ── KPIs ── */
-function methodCounts(list) {
-  const c = {}; for (const e of list) c[e.method] = (c[e.method] || 0) + 1; return c;
-}
-function renderKpis() {
-  const eps = state.endpoints.length;
-  const reads = state.endpoints.filter(e => !isWrite(e.method)).length;
-  const counts = methodCounts(state.endpoints);
-  const max = Math.max(1, ...Object.values(counts));
-  $("kpi-eps").textContent = eps;
-  $("kpi-eps-spark").innerHTML = Object.entries(counts).slice(0, 6).map(([m, n]) =>
-    `<i style="height:${Math.max(5, Math.round(n / max * 30))}px;background:${METHOD_COLOR[m] || "var(--ink-4)"}"
-        title="${esc(m)} ${n}"></i>`).join("");
-  $("kpi-eps-foot").textContent = Object.entries(counts).map(([m, n]) => `${m} ${n}`).join("  ·  ");
-  $("kpi-tools").textContent = eps;
-  $("kpi-tools-foot").textContent = eps > MAX_TOOLS
-    ? `routed: ${MAX_TOOLS} of ${eps} reach the model per turn`
-    : `${reads} read freely · ${eps - reads} need approval`;
-  $("kpi-calls").textContent = state.calls.length;
-  const recent = state.calls.slice(-8);
-  $("kpi-calls-spark").innerHTML = recent.map(c =>
-    `<i style="height:${c.bad ? 10 : 22}px;background:${c.bad ? "var(--err)" : "var(--blue)"}"></i>`).join("");
-  const bad = state.calls.filter(c => c.bad).length;
-  $("kpi-calls-foot").textContent = state.calls.length
-    ? `${state.calls.filter(c => c.kind === "read").length} read · ${state.calls.filter(c => c.kind === "write").length} write${bad ? ` · ${bad} failed` : ""}`
-    : "no calls yet";
-  $("kpi-held").textContent = state.heldTotal;
-  $("kpi-held-card").classList.toggle("hot", !!state.holding);
-  $("kpi-held-badge").className = "badge " + (state.holding ? "hold-ink" : "");
-  $("kpi-held-badge").textContent =
-    state.holding ? "waiting on you" : state.autoApprove ? "auto-approve on" : "gate armed";
-  $("kpi-held-foot").textContent = state.holding
-    ? `${state.holding.method} ${state.holding.path}` : state.heldTotal ? "all decided" : "nothing waiting";
+/* ── counts in the sidebar and page headers ── */
+function renderCounts() {
   $("calls-meta").textContent = state.calls.length + (state.calls.length === 1 ? " call" : " calls");
   $("nav-callcount").textContent = state.calls.length || "";
-  $("session-meta").textContent = `${state.calls.length} calls`;
 }
 
 /* ── call log ── */
-function ledger(kind, method, path, status, bad, note) {
-  state.calls.push({ kind, method, path, status, bad, note: note || "" });
-  renderCalls(); renderKpis(); renderPipeline();
+function ledger(kind, method, path, status, bad, note, tpl) {
+  state.calls.push({ kind, method, path, status, bad, note: note || "", tpl: tpl || "" });
+  renderCalls(); renderCounts(); renderFlow();
 }
 function renderCalls() {
   const rows = state.calls.slice().reverse();
@@ -853,18 +742,11 @@ function suggestionsFor() {
   return out;
 }
 function renderOrientation() {
-  const reads = state.endpoints.filter(ep => !isWrite(ep.method)).length;
-  const writes = state.endpoints.length - reads;
-  $("hello").innerHTML = `
-    <div class="ask"><span class="who">d2</span>
-      <span>${esc(state.apiTitle || state.host)} is loaded and the agent is ready.</span></div>
-    ${state.apiDescription ? `<div class="apidesc">${esc(state.apiDescription)}</div>` : ""}
-    <div class="apidesc"><b>${state.endpoints.length} endpoints</b> became tools:
-      ${reads} read${reads === 1 ? "" : "s"} the agent can call freely,
-      ${writes} write${writes === 1 ? "" : "s"} that stop at the approval gate.</div>
-    <span class="cap">Try one</span>
-    <div class="suggs">${suggestionsFor().map(q =>
-      `<button class="sugg" title="${esc(q)}">${esc(q)}</button>`).join("")}</div>`;
+  $("hello").hidden = false;
+  $("hero-cap").textContent = `tools, read from ${state.apiTitle || state.host}'s docs`;
+  countUp($("hero-count"), state.endpoints.length);
+  $("hello").innerHTML = replay.active ? "" : `<div class="suggs">${suggestionsFor().map(q =>
+    `<button class="sugg" title="${esc(q)}">${esc(q)}</button>`).join("")}</div>`;
   $("hello").querySelectorAll(".sugg").forEach(b => b.onclick = () => { $("prompt").value = b.title; send(); });
 }
 function enterApp() {
@@ -887,7 +769,7 @@ function enterApp() {
     `Shows the bundled AeroTrack demo, not ${state.apiTitle || state.host}.`;
   $("top-status").className = "badge";
   $("top-status").textContent = "Agent ready";
-  renderOrientation(); renderEndpoints(""); renderKpis(); renderPipeline(); renderCalls();
+  renderOrientation(); renderEndpoints(""); renderCounts(); renderFlow(); renderCalls();
   $("prompt").focus();
 }
 $("change-api").onclick = () => location.reload();
@@ -948,22 +830,37 @@ function addTurn(question, sideTag) {
   const el = document.createElement("div");
   el.className = "turn";
   el.innerHTML = `${sideTag ? `<span class="side-tag badge mute"><span class="d"></span>${esc(sideTag)}</span>` : ""}
-    <div class="ask"><span class="who">you</span><span>${esc(question)}</span></div>
-    <div class="said thinking">Working…</div>
-    <div class="evline" hidden></div>`;
+    <div class="ask">${esc(question)}</div>
+    <div class="said thinking">Working…</div>`;
+  $("hello").hidden = true;
   $("thread").appendChild(el);
   el.scrollIntoView({ block: "start", behavior: "smooth" });
   return {
-    el, reads: 0, writes: 0, denied: 0, cats: null,
-    finishLine() {
-      const bits = [];
-      if (this.reads) bits.push(`${this.reads} read${this.reads > 1 ? "s" : ""}`);
-      if (this.writes) bits.push(`${this.writes} write${this.writes > 1 ? "s" : ""}`);
-      if (this.denied) bits.push(`${this.denied} denied`);
-      if (this.cats) bits.push(`routed to ${this.cats.join(", ")}`);
-      const line = this.el.querySelector(".evline");
-      if (bits.length) { line.textContent = bits.join(" · "); line.hidden = false; }
+    el, cats: null,
+    addCall(method, path, tpl, status, count, bad) {
+      const row = document.createElement("div");
+      let noun = (tpl || path).split(" ").pop().split("?")[0].split("/")
+        .filter(s => s && !s.startsWith("{")).pop() || "";
+      if (count === 1) noun = noun.replace(/s$/, "");
+      row.innerHTML = `<div class="call"><span class="m ${esc(method)}">${esc(method)}</span>
+          <span class="p">${pathCell(path)}</span><span class="st${bad ? " bad" : ""}">${esc(status)}</span></div>` +
+        (count != null && !isWrite(method) && !bad
+          ? `<div class="got">→ ${count} ${esc(noun.replace(/[_-]/g, " "))}</div>` : "");
+      this.el.insertBefore(row, this.el.querySelector(".held") || this.el.querySelector(".said"));
     },
+    hold(ev) {
+      const { path } = wireRequest(ev);
+      const h = document.createElement("div");
+      h.className = "held";
+      h.innerHTML = `<div class="lbl">● Waiting for you</div>
+        <div class="big"><span style="color:${METHOD_COLOR[ev.method] || "var(--ink)"}">${esc(ev.method)}</span> ${esc(path)}</div>
+        <div class="acts"><button class="btn btn-p" id="approve">Approve <kbd id="approve-kbd">Ctrl&#9166;</kbd></button>
+          <button class="btn btn-s" id="deny">Deny</button>
+          <input id="deny-reason" placeholder="Why? The agent is told" aria-label="Reason for denying"></div>`;
+      this.el.insertBefore(h, this.el.querySelector(".said"));
+      h.scrollIntoView({ block: "end", behavior: reducedMotion() ? "auto" : "smooth" });
+    },
+    release() { const h = this.el.querySelector(".held"); if (h) h.remove(); },
     say(text, cls) {
       const s = this.el.querySelector(".said");
       s.className = "said" + (cls ? " " + cls : "");
@@ -1006,16 +903,14 @@ function wireRequest(ev) {
 function bindGate() {
   $("approve").onclick = () => decide(true);
   $("deny").onclick = () => decide(false);
-  $("autoapprove").onchange = e => {
-    state.autoApprove = e.target.checked; renderKpis(); syncCnote();
-  };
   if (navigator.platform.startsWith("Mac")) $("approve-kbd").textContent = "⌘⏎";
   const t0 = state.holding._t0 || (state.holding._t0 = Date.now());
   const tick = () => { const el = $("held-age"); if (el) el.textContent = `Held ${mmss(Date.now() - t0)}.`; };
   tick(); clearInterval(state.heldTimer); state.heldTimer = setInterval(tick, 1000);
 }
-function openRail(ev) {
-  state.holding = ev; state.heldTotal++;
+function openRail(ev, turn) {
+  state.holding = ev; state.heldTotal++; state.holdTurn = turn;
+  turn.hold(ev);
   $("nav-held").hidden = false;
   document.querySelector(".app").classList.add("holding");
   $("send").disabled = false;
@@ -1025,10 +920,11 @@ function openRail(ev) {
   $("top-status").className = "badge hold-ink";
   $("top-status").textContent = "Write held";
   document.querySelectorAll(".said.thinking").forEach(s => { s.textContent = "Waiting for your decision…"; });
-  renderPipeline(); renderKpis();
+  renderFlow(); bindGate();
 }
 function closeRail() {
-  state.holding = null;
+  if (state.holdTurn) state.holdTurn.release();
+  state.holding = null; state.holdTurn = null;
   clearInterval(state.heldTimer); state.heldTimer = null;
   $("nav-held").hidden = true;
   document.querySelector(".app").classList.remove("holding");
@@ -1037,7 +933,7 @@ function closeRail() {
   $("prompt").placeholder = "Ask the agent…";
   $("top-status").className = "badge";
   $("top-status").textContent = "Agent ready";
-  syncCnote(); renderPipeline(); renderKpis();
+  syncCnote(); renderFlow();
 }
 function syncCnote() {
   if (state.holding) return;
@@ -1045,7 +941,7 @@ function syncCnote() {
     ? `Auto-approve is on: writes run without stopping. <button id="auto-off">Turn it off</button>`
     : `Reads run on their own. Writes stop for your approval.`;
   const off = $("auto-off");
-  if (off) off.onclick = () => { state.autoApprove = false; renderKpis(); renderPipeline(); syncCnote(); };
+  if (off) off.onclick = () => { state.autoApprove = false; renderFlow(); syncCnote(); };
 }
 async function decide(approve) {
   if (!state.holding) return;
@@ -1097,34 +993,32 @@ async function send() {
     state.streaming = false; $("send").disabled = false;
     if (state.holding) closeRail();
     else { $("top-status").className = "badge"; $("top-status").textContent = "Agent ready"; }
-    turn.finishLine(); $("prompt").focus();
+    $("prompt").focus();
   }
 }
 function handleEvent(ev, turn) {
   if (ev.type === "routing") { turn.cats = ev.categories; state.routedTo = ev.categories; }
   else if (ev.type === "tool_call") {
-    turn.pending = { kind: isWrite(ev.method) ? "write" : "read", method: ev.method, path: ev.path };
+    turn.pending = { kind: isWrite(ev.method) ? "write" : "read", method: ev.method, path: ev.path,
+      tpl: ev.method + " " + ev.path };
   } else if (ev.type === "approval_required") {
     const p = wireRequest(ev).path;
-    ledger("write", ev.method, p, "held", false);
+    ledger("write", ev.method, p, "held", false, "", ev.method + " " + ev.path);
     turn.heldIndex = state.calls.length - 1;
-    openRail(ev);
+    openRail(ev, turn);
   } else if (ev.type === "approval_result") {
-    if (turn.heldIndex != null && !ev.approved) {
-      state.calls[turn.heldIndex].status = "denied"; turn.denied++;
-      renderCalls(); renderKpis();
-    } else if (turn.heldIndex != null) {
-      state.calls.splice(turn.heldIndex, 1); turn.heldIndex = null;  // the real result lands next
-      renderCalls(); renderKpis();
+    if (turn.heldIndex != null) {
+      state.calls.splice(turn.heldIndex, 1); turn.heldIndex = null;  // the result or the denial lands next
+      renderCalls(); renderCounts();
     }
     closeRail();
   } else if (ev.type === "tool_result") {
     const t = ev.trace, stx = statusText(t), bad = !t.ok;
     const meta = turn.pending ||
-      { kind: isWrite(t.method) ? "write" : "read", method: t.method, path: pathOf(t.url) };
+      { kind: isWrite(t.method) ? "write" : "read", method: t.method, path: pathOf(t.url), tpl: "" };
     if (t.url) meta.path = pathOf(t.url);
-    meta.kind === "write" ? turn.writes++ : turn.reads++;
-    ledger(meta.kind, meta.method, meta.path, stx, bad && stx !== "denied");
+    turn.addCall(meta.method, meta.path, meta.tpl, stx, t.count, bad);
+    ledger(meta.kind, meta.method, meta.path, stx, bad && stx !== "denied", "", meta.tpl);
     turn.pending = null;
   } else if (ev.type === "reply") { turn.say(ev.text); }
   else if (ev.type === "error") { turn.say(ev.detail, "error"); }
@@ -1141,11 +1035,12 @@ async function sendAside(text) {
     if (!resp.ok) throw new Error(data.detail || resp.statusText);
     for (const t of data.trace) {
       const path = pathOf(t.url), stx = statusText(t);
-      turn.reads++; ledger("read", t.method, path, stx, !t.ok);
+      turn.addCall(t.method, path, "", stx, t.count, !t.ok);
+      ledger("read", t.method, path, stx, !t.ok);
     }
     turn.say(data.reply);
   } catch (e) { turn.say(e.message, "error"); }
-  finally { turn.finishLine(); $("prompt").focus(); }
+  finally { $("prompt").focus(); }
 }
 $("send").onclick = send;
 $("prompt").addEventListener("keydown", e => {
