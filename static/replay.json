@@ -1,0 +1,331 @@
+{
+ "recorded_at": "2026-10-04T06:32:15Z",
+ "model": "openai/gpt-oss-20b",
+ "prompt": "Which warehouse has room for the most packages? Create a 5 kg express shipment from its city to Delhi.",
+ "ingest": {
+  "source": "openapi",
+  "api_title": "AeroTrack Logistics API",
+  "api_description": "Live package-delivery operations API: shipments, couriers, warehouses, alerts and fleet statistics. Data changes in real time \u2014 watch it at /monitor.",
+  "endpoints": [
+   {
+    "method": "GET",
+    "path": "/shipments",
+    "description": "List shipments, filterable by status, city and priority",
+    "params": [
+     {
+      "name": "status",
+      "location": "query",
+      "type": "string",
+      "required": false,
+      "description": "Filter by status: created, picked_up, in_transit, out_for_delivery, delivered, delayed"
+     },
+     {
+      "name": "city",
+      "location": "query",
+      "type": "string",
+      "required": false,
+      "description": "Match shipments whose origin OR destination is this city"
+     },
+     {
+      "name": "priority",
+      "location": "query",
+      "type": "string",
+      "required": false,
+      "description": "Filter by priority: standard or express"
+     },
+     {
+      "name": "limit",
+      "location": "query",
+      "type": "integer",
+      "required": false,
+      "description": "Maximum number of results"
+     }
+    ]
+   },
+   {
+    "method": "POST",
+    "path": "/shipments",
+    "description": "Create a new shipment",
+    "params": [
+     {
+      "name": "origin_city",
+      "location": "body",
+      "type": "string",
+      "required": true,
+      "description": "City the package ships from, e.g. Mumbai"
+     },
+     {
+      "name": "dest_city",
+      "location": "body",
+      "type": "string",
+      "required": true,
+      "description": "Destination city, e.g. Pune"
+     },
+     {
+      "name": "weight_kg",
+      "location": "body",
+      "type": "number",
+      "required": false,
+      "description": "Package weight in kilograms"
+     },
+     {
+      "name": "priority",
+      "location": "body",
+      "type": "string",
+      "required": false,
+      "description": "Delivery priority tier"
+     }
+    ]
+   },
+   {
+    "method": "GET",
+    "path": "/shipments/{shipment_id}",
+    "description": "Get one shipment with full details",
+    "params": [
+     {
+      "name": "shipment_id",
+      "location": "path",
+      "type": "string",
+      "required": true,
+      "description": ""
+     }
+    ]
+   },
+   {
+    "method": "GET",
+    "path": "/shipments/{shipment_id}/events",
+    "description": "Get a shipment's full tracking history",
+    "params": [
+     {
+      "name": "shipment_id",
+      "location": "path",
+      "type": "string",
+      "required": true,
+      "description": ""
+     }
+    ]
+   },
+   {
+    "method": "PATCH",
+    "path": "/shipments/{shipment_id}/status",
+    "description": "Update a shipment's status",
+    "params": [
+     {
+      "name": "shipment_id",
+      "location": "path",
+      "type": "string",
+      "required": true,
+      "description": ""
+     },
+     {
+      "name": "status",
+      "location": "body",
+      "type": "string",
+      "required": true,
+      "description": "New shipment status"
+     },
+     {
+      "name": "note",
+      "location": "body",
+      "type": "string",
+      "required": false,
+      "description": "Optional note explaining the change"
+     }
+    ]
+   },
+   {
+    "method": "POST",
+    "path": "/shipments/{shipment_id}/assign",
+    "description": "Assign a courier to a shipment",
+    "params": [
+     {
+      "name": "shipment_id",
+      "location": "path",
+      "type": "string",
+      "required": true,
+      "description": ""
+     },
+     {
+      "name": "courier_id",
+      "location": "body",
+      "type": "string",
+      "required": true,
+      "description": "ID of the courier to assign, e.g. CR-3"
+     }
+    ]
+   },
+   {
+    "method": "GET",
+    "path": "/couriers",
+    "description": "List couriers, filterable by status",
+    "params": [
+     {
+      "name": "status",
+      "location": "query",
+      "type": "string",
+      "required": false,
+      "description": "Filter by courier status: idle or on_route"
+     }
+    ]
+   },
+   {
+    "method": "GET",
+    "path": "/couriers/{courier_id}",
+    "description": "Get one courier's details and workload",
+    "params": [
+     {
+      "name": "courier_id",
+      "location": "path",
+      "type": "string",
+      "required": true,
+      "description": ""
+     }
+    ]
+   },
+   {
+    "method": "GET",
+    "path": "/warehouses",
+    "description": "List all warehouses and their load",
+    "params": []
+   },
+   {
+    "method": "GET",
+    "path": "/stats/overview",
+    "description": "Fleet-wide operational statistics",
+    "params": []
+   },
+   {
+    "method": "GET",
+    "path": "/alerts/delayed",
+    "description": "All currently delayed shipments \u2014 the ops alert feed",
+    "params": []
+   }
+  ],
+  "base_url": "/demo"
+ },
+ "deny_reason": "Not today, Delhi intake is closed.",
+ "prefix": [
+  {
+   "t": 12891,
+   "ev": {
+    "type": "tool_call",
+    "tool": "get_warehouses_8",
+    "method": "GET",
+    "path": "/warehouses",
+    "args": {}
+   }
+  },
+  {
+   "t": 12969,
+   "ev": {
+    "type": "tool_result",
+    "trace": {
+     "tool": "get_warehouses_8",
+     "method": "GET",
+     "url": "http://127.0.0.1:8010/demo/warehouses",
+     "status": 200,
+     "ok": true,
+     "summary": "HTTP 200, 291 chars",
+     "count": 4
+    }
+   }
+  },
+  {
+   "t": 16641,
+   "ev": {
+    "type": "tool_call",
+    "tool": "post_shipments_1",
+    "method": "POST",
+    "path": "/shipments",
+    "args": {
+     "dest_city": "Delhi",
+     "origin_city": "Hyderabad",
+     "priority": "express",
+     "weight_kg": 5
+    }
+   }
+  },
+  {
+   "t": 16641,
+   "ev": {
+    "type": "approval_required",
+    "approval_id": "c5c397f9f422",
+    "tool": "post_shipments_1",
+    "method": "POST",
+    "path": "/shipments",
+    "args": {
+     "dest_city": "Delhi",
+     "origin_city": "Hyderabad",
+     "priority": "express",
+     "weight_kg": 5
+    }
+   }
+  }
+ ],
+ "branches": {
+  "approve": [
+   {
+    "t": 31,
+    "ev": {
+     "type": "approval_result",
+     "approved": true,
+     "reason": ""
+    }
+   },
+   {
+    "t": 62,
+    "ev": {
+     "type": "tool_result",
+     "trace": {
+      "tool": "post_shipments_1",
+      "method": "POST",
+      "url": "http://127.0.0.1:8010/demo/shipments",
+      "status": 201,
+      "ok": true,
+      "summary": "HTTP 201, 327 chars",
+      "count": 1
+     }
+    }
+   },
+   {
+    "t": 11906,
+    "ev": {
+     "type": "reply",
+     "text": "The warehouse with the greatest remaining capacity is **WH\u20114 (Hyderabad)** \u2013 it can still hold 356 more packages (500\u202fcapacity\u202f\u2013\u202f144\u202fpackages held).\n\nA 5\u202fkg express shipment has been created from Hyderabad to Delhi:\n\n- **Shipment ID:** `SHP-1018`\n- **Origin:** Hyderabad\n- **Destination:** Delhi\n- **Weight:** 5\u202fkg\n- **Priority:** express\n- **Status:** created\n\n(Endpoint used: `GET /warehouses` to determine capacity, then `POST /shipments` to create the shipment.)"
+    }
+   }
+  ],
+  "deny": [
+   {
+    "t": 31,
+    "ev": {
+     "type": "approval_result",
+     "approved": false,
+     "reason": "Not today, Delhi intake is closed."
+    }
+   },
+   {
+    "t": 31,
+    "ev": {
+     "type": "tool_result",
+     "trace": {
+      "tool": "post_shipments_1",
+      "method": "POST",
+      "url": "http://127.0.0.1:8010/demo/shipments",
+      "status": null,
+      "ok": false,
+      "summary": "\u270b denied \u2014 human approval not given",
+      "count": null
+     }
+    }
+   },
+   {
+    "t": 1860,
+    "ev": {
+     "type": "reply",
+     "text": "The warehouse with the most available space is **WH\u20114 in Hyderabad** (500\u202fcapacity \u2013 144\u202fheld\u202f=\u202f356 slots free).  \nI attempted to create a 5\u202fkg express shipment from Hyderabad to Delhi, but the request was **denied by the human operator** because Delhi intake is closed."
+    }
+   }
+  ]
+ }
+}

@@ -1,10 +1,11 @@
 """Record one real AeroTrack agent turn for the console's first-load replay.
 
-Needs the app running locally with a working model key:
-    python -m uvicorn app.main:app --port 8010
-    python scripts/capture_replay.py --base http://127.0.0.1:8010
+Needs the app running locally with a working model key. Pass the model the server is using,
+so the recording says which model produced it:
+    GROQ_AGENT_MODEL=openai/gpt-oss-120b python -m uvicorn app.main:app --port 8010
+    python scripts/capture_replay.py --base http://127.0.0.1:8010 --model openai/gpt-oss-120b
 
-The same prompt runs twice, approving the held write once and denying it once. Both runs must hold the
+The same prompt runs twice, denying the held write once and then approving it. Both runs must hold the
 same request, so the deny outcome belongs to the request on screen, and neither may ask for a second
 approval. Anything else is retried.
 """
@@ -17,8 +18,9 @@ from pathlib import Path
 
 import httpx
 
-PROMPT = "Find a shipment that has no courier yet and assign it an idle courier from its origin city."
-DENY_REASON = "Not that one, check with dispatch first."
+# Warehouses never change, so this has one right answer on every run: one read, then one write.
+PROMPT = "Which warehouse has room for the most packages? Create a 5 kg express shipment from its city to Delhi."
+DENY_REASON = "Not today, Delhi intake is closed."
 OUT = Path(__file__).resolve().parent.parent / "static" / "replay.json"
 
 
@@ -69,24 +71,28 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:8010")
     ap.add_argument("--tries", type=int, default=5)
+    ap.add_argument("--model", required=True, help="the agent model the server is pinned to")
     args = ap.parse_args()
     base = args.base.rstrip("/")
     for attempt in range(1, args.tries + 1):
-        ing, prefix, yes = run(base, approve=True)
-        if not usable(prefix, yes, True):
-            print(f"attempt {attempt}: approve run unusable, retrying")
-            continue
+        # deny first: it changes nothing, so the approve run sees the same data and holds the same request
         _, prefix_no, no = run(base, approve=False)
-        if usable(prefix_no, no, False) and held(prefix) == held(prefix_no):
+        if not usable(prefix_no, no, False):
+            print(f"attempt {attempt}: deny run unusable, retrying")
+            continue
+        ing, prefix, yes = run(base, approve=True)
+        if usable(prefix, yes, True) and held(prefix) == held(prefix_no):
             break
-        print(f"attempt {attempt}: deny run unusable or held a different request, retrying")
+        print(f"attempt {attempt}: approve run unusable or held a different request "
+              f"({held(prefix) if prefix and prefix[-1]['ev']['type'] == 'approval_required' else 'no hold'} "
+              f"vs {held(prefix_no)}), retrying")
     else:
         raise SystemExit("could not record two matching runs")
     ingest = {k: ing[k] for k in ("source", "api_title", "api_description", "endpoints")}
     ingest["base_url"] = "/demo"
     OUT.write_text(json.dumps({
         "recorded_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "prompt": PROMPT, "ingest": ingest, "deny_reason": DENY_REASON,
+        "model": args.model, "prompt": PROMPT, "ingest": ingest, "deny_reason": DENY_REASON,
         "prefix": prefix, "branches": {"approve": yes, "deny": no},
     }, indent=1), encoding="utf-8")
     print(f"wrote {OUT} · {len(prefix)} events to the gate, {len(yes)}/{len(no)} after it")
