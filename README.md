@@ -14,9 +14,10 @@ Most tool-calling demos ship with tools someone wrote by hand. Here the tools do
 
 Beyond the core loop:
 
-- Write operations (POST/PUT/PATCH/DELETE) pause the agent at an approval gate. The gate is the last stage of the pipeline panel, and it opens with the request exactly as it will be sent — method, resolved path, headers and JSON body. You approve (Ctrl/Cmd+Enter), deny — optionally with a reason the agent is told — or turn on auto-approve for the session.
+- Write operations (POST/PUT/PATCH/DELETE) pause the agent at an approval gate. The held write shows its method, resolved path and the arguments it will send, and one click opens the request exactly as it will go out, headers and JSON body included. You approve (Ctrl/Cmd+Enter), deny (optionally with a reason the agent is told), or turn on auto-approve for the session.
 - While a write is held you can still ask read-only side questions; they run as an isolated turn so the held conversation is never touched.
 - Tool calls stream to the UI over SSE as they happen, including routing decisions and approval prompts.
+- The site opens on a replay of one recorded AeroTrack run, labelled as a replay, which stops at the approval gate. Approve or Deny plays the recorded outcome. Your first click in the input switches to a live session. The recording is made by `scripts/capture_replay.py` against a running server.
 - Large APIs get routed: endpoints are clustered by the first path segment that names a resource, and a small model picks the relevant clusters per question, so a 600-endpoint API doesn't blow the context budget.
 - Sessions persist in SQLite, so conversations survive restarts.
 - Any ingested API can be exported as a standalone MCP server file, usable from Claude Desktop or Cursor.
@@ -26,7 +27,7 @@ Beyond the core loop:
 
 The app ships with AeroTrack, a simulated logistics API (shipments, couriers, warehouses) with a background simulator that keeps orders flowing. Its OpenAPI spec is auto-generated, so it doubles as the test case for the deterministic ingestion path. Swagger docs are at `/demo/docs`.
 
-The demo worth doing: open `/monitor` in one window and the app in another, pick **AeroTrack** on the start screen, then ask:
+The demo worth doing: open `/monitor` in one window and the app in another, click into the app's input to start a live AeroTrack session, then ask:
 
 > Create a new express shipment of 5 kg from Mumbai to Pune, find an idle courier, and assign them to it.
 
@@ -55,7 +56,7 @@ Note: docs sites that render via JavaScript can't be scraped. Use the API's spec
 ## Tests and evals
 
 ```bash
-pytest evals -q               # 54 offline tests, no API key needed
+pytest evals -q               # 68 offline tests, no API key needed
 python -m evals.agent_evals   # live tasks against a running server
 ```
 
