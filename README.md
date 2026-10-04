@@ -56,7 +56,7 @@ Note: docs sites that render via JavaScript can't be scraped. Use the API's spec
 ## Tests and evals
 
 ```bash
-pytest evals -q               # 68 offline tests, no API key needed
+pytest evals -q               # 69 offline tests, no API key needed
 python -m evals.agent_evals   # live tasks against a running server
 ```
 
