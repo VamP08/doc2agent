@@ -11,6 +11,18 @@ RETIRED = Exception(
     "`llama-3.3-70b-versatile` does not exist or you do not have access to it.'}}"
 )
 RATE_LIMITED = Exception("Error code: 429 - rate_limit_exceeded: tokens per day")
+DAILY_CAP = Exception("Error code: 429 - rate_limit_exceeded: Rate limit reached for model `a` "
+                      "on tokens per day (TPD): Limit 200000, Used 199641. Please try again in 15m59.9s.")
+MINUTE_CAP = Exception("Error code: 429 - rate_limit_exceeded: Rate limit reached for model `a` "
+                       "on tokens per minute (TPM): Limit 8000, Used 7200. Please try again in 12.5s.")
+
+
+@pytest.fixture(autouse=True)
+def fresh_cooldowns():
+    from app import llm
+    llm._cooldown.clear()
+    yield
+    llm._cooldown.clear()
 
 
 def client_raising(*errors):
@@ -33,12 +45,30 @@ def test_first_working_model_wins_without_extra_calls():
     assert client.chat.completions.create.call_count == 1
 
 
-def test_rate_limit_is_not_a_model_problem_and_propagates():
-    """Retrying a 429 on another model would hide a real account-level limit."""
-    client = client_raising(RATE_LIMITED)
-    with pytest.raises(Exception, match="429"):
+def test_daily_cap_moves_to_the_next_model_and_skips_it_after():
+    """Groq budgets tokens per model, so a spent model says nothing about the next one."""
+    client = client_raising(DAILY_CAP)
+    assert complete(client, ["a", "b"], messages=[]) == "ok"
+    client.chat.completions.create.side_effect = ["ok"]
+    complete(client, ["a", "b"], messages=[])
+    used = [c.kwargs["model"] for c in client.chat.completions.create.call_args_list]
+    assert used == ["a", "b", "b"]          # "a" is not asked again while its budget is spent
+
+
+def test_per_minute_cap_waits_and_retries_the_same_model(monkeypatch):
+    waits = []
+    monkeypatch.setattr("app.llm.time.sleep", waits.append)
+    client = client_raising(MINUTE_CAP)
+    assert complete(client, ["a", "b"], messages=[]) == "ok"
+    used = [c.kwargs["model"] for c in client.chat.completions.create.call_args_list]
+    assert used == ["a", "a"] and waits == [12.5]
+
+
+def test_every_model_capped_raises_the_rate_limit_for_the_message():
+    client = MagicMock()
+    client.chat.completions.create.side_effect = DAILY_CAP
+    with pytest.raises(Exception, match="per day"):
         complete(client, ["a", "b"], messages=[])
-    assert client.chat.completions.create.call_count == 1
 
 
 def test_all_models_gone_raises_a_named_error():
@@ -74,7 +104,3 @@ def test_per_minute_limit_says_wait_a_minute_not_come_back_later():
     assert "minute" in detail and "few hours" not in detail
     assert "few hours" in _agent_error_detail(RATE_LIMITED)
 
-
-def test_agent_client_waits_out_short_rate_limits():
-    from app.llm import groq_client
-    assert groq_client().max_retries >= 5
