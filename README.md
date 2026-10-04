@@ -20,7 +20,7 @@ Beyond the core loop:
 - The site opens on a replay of one recorded AeroTrack run, labelled as a replay, which stops at the approval gate. Approve or Deny plays the recorded outcome. Your first click in the input switches to a live session. The recording is made by `scripts/capture_replay.py` against a running server.
 - Large APIs get routed: endpoints are clustered by the first path segment that names a resource, and a small model picks the relevant clusters per question, so a 600-endpoint API doesn't blow the context budget.
 - Sessions persist in SQLite, so conversations survive restarts.
-- Any ingested API can be exported as a standalone MCP server file, usable from Claude Desktop or Cursor.
+- Any ingested API can be exported as a standalone MCP server file, usable from Claude Desktop or Cursor. The export covers the first 40 endpoints and has no approval gate of its own; the page that offers it says both.
 - SSRF protection: every hostname must resolve to a public IP or the request is refused.
 
 ## The built-in demo
@@ -56,7 +56,7 @@ Note: docs sites that render via JavaScript can't be scraped. Use the API's spec
 ## Tests and evals
 
 ```bash
-pytest evals -q               # 69 offline tests, no API key needed
+pytest evals -q               # 71 offline tests, no API key needed
 python -m evals.agent_evals   # live tasks against a running server
 ```
 
