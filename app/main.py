@@ -2,6 +2,7 @@
 import asyncio
 import json
 import os
+import re
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -201,11 +202,12 @@ def api_resolve_approval(approval_id: str, decision: ApprovalDecision) -> dict:
 
 
 @app.get("/api/sessions/{session_id}/mcp")
-def api_export_mcp(session_id: str) -> PlainTextResponse:
+def api_export_mcp(session_id: str, name: str | None = None) -> PlainTextResponse:
     session = _get_session(session_id)
     host = urlparse(session.base_url).hostname or "api"
-    code = generate_mcp_server(session.base_url, session.endpoints, title=host)
-    filename = f"{host.replace('.', '_')}_mcp.py"
+    code = generate_mcp_server(session.base_url, session.endpoints, title=name or host)
+    slug = re.sub(r"[^a-z0-9]+", "_", (name or host).lower()).strip("_") or "api"
+    filename = f"{slug}_mcp.py"
     return PlainTextResponse(
         code,
         media_type="text/x-python",

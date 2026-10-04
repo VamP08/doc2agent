@@ -149,3 +149,15 @@ def test_trace_records_time_size_and_a_bounded_preview():
     assert trace.size == len(body.encode())
     assert trace.preview == body[:2000] and len(body) > 2000
     assert trace.count == 400
+
+
+def test_mcp_export_file_is_named_after_the_api():
+    from fastapi.testclient import TestClient
+    from app import main
+    from app.agent import AgentSession
+    main.SESSIONS["export-test"] = AgentSession(base_url="https://api.example.com/v1", endpoints=[EP])
+    client = TestClient(main.app)
+    named = client.get("/api/sessions/export-test/mcp", params={"name": "AeroTrack Logistics API"})
+    assert 'filename="aerotrack_logistics_api_mcp.py"' in named.headers["content-disposition"]
+    unnamed = client.get("/api/sessions/export-test/mcp")
+    assert 'filename="api_example_com_mcp.py"' in unnamed.headers["content-disposition"]
