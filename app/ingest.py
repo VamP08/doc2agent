@@ -12,9 +12,8 @@ from urllib.parse import urljoin, urlparse
 import httpx
 import yaml
 from bs4 import BeautifulSoup
-from groq import Groq
 
-from .llm import EXTRACTION_MODELS, candidates, complete
+from .llm import EXTRACTION_MODELS, candidates, complete, groq_client
 from .models import Endpoint, Param
 from .safety import assert_public_url
 
@@ -169,7 +168,7 @@ def html_to_text(html: str) -> str:
 
 def llm_extract(text: str, page_url: str) -> tuple[str, list[Endpoint]]:
     """Extract endpoints from free-form docs text via the LLM, chunk by chunk."""
-    client = Groq()
+    client = groq_client()
     models = candidates("extraction", EXTRACTION_MODELS)
     chunks = [text[i : i + LLM_CHUNK_CHARS] for i in range(0, len(text), LLM_CHUNK_CHARS)]
 

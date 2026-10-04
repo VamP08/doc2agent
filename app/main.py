@@ -83,6 +83,11 @@ def _save_session(session_id: str, session: AgentSession) -> None:
 
 
 def _agent_error_detail(exc: Exception) -> str:
+    if "rate_limit_exceeded" in str(exc) and "per minute" in str(exc):
+        return (
+            "The demo model is over its per-minute limit (Groq free tier). "
+            "Wait a minute and ask again."
+        )
     if "rate_limit_exceeded" in str(exc):
         return (
             "The demo's free daily LLM quota is exhausted (Groq free tier). "

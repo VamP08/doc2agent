@@ -64,3 +64,17 @@ def test_no_retired_model_names_remain_in_defaults():
     for models in (AGENT_MODELS, EXTRACTION_MODELS, ROUTER_MODELS):
         assert models, "each role needs at least one candidate"
         assert not any("llama-3.3" in m or "llama-3.1" in m for m in models)
+
+
+def test_per_minute_limit_says_wait_a_minute_not_come_back_later():
+    from app.main import _agent_error_detail
+    tpm = Exception("Error code: 429 - rate_limit_exceeded: Rate limit reached for model "
+                    "`openai/gpt-oss-120b` on tokens per minute (TPM): Limit 8000, Used 7200")
+    detail = _agent_error_detail(tpm)
+    assert "minute" in detail and "few hours" not in detail
+    assert "few hours" in _agent_error_detail(RATE_LIMITED)
+
+
+def test_agent_client_waits_out_short_rate_limits():
+    from app.llm import groq_client
+    assert groq_client().max_retries >= 5

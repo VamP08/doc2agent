@@ -8,10 +8,9 @@ import json
 from dataclasses import dataclass, field
 from typing import Iterator
 
-from groq import Groq
 
 from .guardrails import APPROVALS, requires_approval
-from .llm import AGENT_MODELS, candidates, complete
+from .llm import AGENT_MODELS, candidates, complete, groq_client
 from .models import Endpoint, ToolCallTrace
 from .router import select_endpoints
 from .tools import build_toolset, execute_endpoint
@@ -140,7 +139,7 @@ def run_agent_events(
 ) -> Iterator[dict]:
     """Yield event dicts: routing, tool_call, approval_required,
     approval_result, tool_result, reply."""
-    client = Groq()
+    client = groq_client()
     drop_denied_calls(session.messages)
     session.messages.append({"role": "user", "content": user_message})
 

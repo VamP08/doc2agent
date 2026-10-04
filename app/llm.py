@@ -18,6 +18,13 @@ ROUTER_MODELS = ["openai/gpt-oss-20b", "openai/gpt-oss-120b"]
 _GONE = ("model_not_found", "does not exist", "decommissioned", "has been deprecated")
 
 
+def groq_client() -> Groq:
+    """Free-tier keys cap tokens per minute; a multi-step turn can cross that
+    cap mid-answer. Extra retries let the SDK wait out Groq's retry-after
+    instead of failing the turn."""
+    return Groq(max_retries=6)
+
+
 class NoModelAvailable(RuntimeError):
     pass
 

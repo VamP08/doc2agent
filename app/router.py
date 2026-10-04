@@ -11,7 +11,7 @@ import re
 
 from groq import Groq
 
-from .llm import ROUTER_MODELS, candidates, complete
+from .llm import ROUTER_MODELS, candidates, complete, groq_client
 from .models import Endpoint
 from .tools import MAX_TOOLS
 
@@ -71,7 +71,7 @@ def select_endpoints(
     chosen_names: list[str] = []
     try:
         completion = complete(
-            client or Groq(),
+            client or groq_client(),
             candidates("router", ROUTER_MODELS),
             response_format={"type": "json_object"},
             temperature=0,
