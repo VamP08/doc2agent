@@ -56,6 +56,9 @@ class ToolCallTrace(BaseModel):
     ok: bool = True
     summary: str = ""
     count: Optional[int] = None
+    ms: Optional[int] = None
+    size: Optional[int] = None
+    preview: str = ""          # the first 2 KB of the response, for the call log
 
 
 class ChatResponse(BaseModel):

@@ -1,6 +1,7 @@
 """Turn extracted endpoints into LLM tool schemas, and execute real HTTP calls."""
 import json
 import re
+import time
 from urllib.parse import urlencode
 
 import httpx
@@ -104,6 +105,7 @@ def execute_endpoint(
 
     try:
         assert_public_url(url)
+        started = time.perf_counter()
         with httpx.Client(follow_redirects=True, timeout=25) as client:
             resp = client.request(
                 endpoint.method,
@@ -112,8 +114,11 @@ def execute_endpoint(
                 json=body or None,
                 headers=headers,
             )
+        trace.ms = round((time.perf_counter() - started) * 1000)
         trace.status = resp.status_code
         trace.ok = resp.is_success
+        trace.size = len(resp.content)
+        trace.preview = resp.text[:2000]
         text = resp.text[:MAX_RESPONSE_CHARS]
         trace.summary = f"HTTP {resp.status_code}, {len(resp.text)} chars"
         try:

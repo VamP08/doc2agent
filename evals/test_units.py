@@ -1,4 +1,6 @@
 """Unit tests: tool synthesis, router clustering, MCP export, persistence."""
+import httpx
+from unittest.mock import patch
 import ast
 
 from app.agent import AgentSession
@@ -132,3 +134,18 @@ def test_result_count_first_list_in_object():
 def test_result_count_none_without_a_list():
     assert result_count({"id": "SHP-1"}) is None
     assert result_count("plain text") is None
+
+
+def test_trace_records_time_size_and_a_bounded_preview():
+    from app import tools
+    body = '{"items": [' + ",".join(['{"id": 1}'] * 400) + "]}"
+    real_client = httpx.Client
+    transport = httpx.MockTransport(lambda req: httpx.Response(200, text=body))
+    with patch.object(tools.httpx, "Client", lambda **kw: real_client(transport=transport, **kw)), \
+         patch.object(tools, "assert_public_url", lambda url: None):
+        _, trace = tools.execute_endpoint(EP, {"petId": 7}, "https://api.example.com")
+    assert trace.ok and trace.status == 200
+    assert trace.ms is not None and trace.ms >= 0
+    assert trace.size == len(body.encode())
+    assert trace.preview == body[:2000] and len(body) > 2000
+    assert trace.count == 400
