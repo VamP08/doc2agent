@@ -189,6 +189,8 @@ kbd{font:400 var(--t-micro) var(--mono);padding:2px 5px;border:1px solid current
 .held{margin-top:40px;border-top:1px solid var(--line);padding-top:24px;display:flex;flex-direction:column;gap:16px}
 .held .lbl{font:600 11px/1 var(--lab);letter-spacing:.08em;text-transform:uppercase;color:var(--blue-2)}
 .held .big{font:500 40px/1.12 var(--mono);color:var(--ink);letter-spacing:-.02em;overflow-wrap:anywhere}
+.held .sends{display:flex;flex-wrap:wrap;gap:6px 18px;font:400 var(--t-data)/1.4 var(--mono);color:var(--ink)}
+.held .sends i{font-style:normal;color:var(--ink-4);margin-right:4px}
 .held .acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .held .acts input{flex:1;min-width:180px;height:34px;border-bottom:1px solid var(--line-2);
   font:400 var(--t-data) var(--ui)}
@@ -851,10 +853,14 @@ function addTurn(question, sideTag) {
     },
     hold(ev) {
       const { path } = wireRequest(ev);
+      const sent = Object.entries(ev.args || {})       // what will be written; path params are already in the path
+        .filter(([k, v]) => v != null && !ev.path.includes("{" + k + "}"));
       const h = document.createElement("div");
       h.className = "held";
       h.innerHTML = `<div class="lbl">● Waiting for you</div>
         <div class="big"><span style="color:${METHOD_COLOR[ev.method] || "var(--ink)"}">${esc(ev.method)}</span> ${esc(path)}</div>
+        ${sent.length ? `<div class="sends">${sent.map(([k, v]) =>
+          `<span><i>${esc(k)}</i> ${esc(typeof v === "object" ? JSON.stringify(v) : v)}</span>`).join("")}</div>` : ""}
         <div class="acts"><button class="btn btn-p" id="approve">Approve <kbd id="approve-kbd">Ctrl&#9166;</kbd></button>
           <button class="btn btn-s" id="deny">Deny</button>
           <input id="deny-reason" placeholder="Why? The agent is told" aria-label="Reason for denying"></div>`;
@@ -931,7 +937,7 @@ function closeRail() {
   document.querySelector(".app").classList.remove("holding");
   document.querySelectorAll(".said.thinking").forEach(s => { s.textContent = "Working…"; });
   $("send").disabled = state.streaming;
-  $("prompt").placeholder = "Ask the agent…";
+  $("prompt").placeholder = "Ask the agent, or paste another docs URL";
   $("top-status").className = "badge";
   $("top-status").textContent = "Agent ready";
   syncCnote(); renderFlow();
@@ -1079,7 +1085,7 @@ async function startReplay() {
   enterApp({ focus: false });
   $("nav-mcp").removeAttribute("href");            // nothing to export until a live session exists
   $("replay-badge").hidden = $("replay-again").hidden = false;
-  $("replay-badge").title = "Recorded " + new Date(data.recorded_at).toLocaleString();
+  $("replay-badge").title = `Recorded ${new Date(data.recorded_at).toLocaleString()} with ${data.model}`;
   replay.turn = addTurn(data.prompt);
   playEvents(data.prefix);
 }
