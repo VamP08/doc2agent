@@ -254,14 +254,18 @@ def healthz() -> dict:
     return {"ok": True}
 
 
+# The pages change on every deploy; without this a browser may keep showing the old one.
+REVALIDATE = {"Cache-Control": "no-cache"}
+
+
 @app.get("/")
 def index() -> FileResponse:
-    return FileResponse(STATIC_DIR / "index.html")
+    return FileResponse(STATIC_DIR / "index.html", headers=REVALIDATE)
 
 
 @app.get("/monitor")
 def monitor() -> FileResponse:
-    return FileResponse(STATIC_DIR / "monitor.html")
+    return FileResponse(STATIC_DIR / "monitor.html", headers=REVALIDATE)
 
 
 @app.get("/favicon.ico", include_in_schema=False)

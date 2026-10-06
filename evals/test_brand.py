@@ -21,3 +21,8 @@ def test_pages_link_the_icons():
     for page in ("/", "/monitor"):
         html = client.get(page).text
         assert 'rel="icon"' in html and "/static/brand/favicon.svg" in html
+
+
+def test_pages_are_revalidated_after_a_deploy():
+    for page in ("/", "/monitor"):
+        assert client.get(page).headers["cache-control"] == "no-cache"
