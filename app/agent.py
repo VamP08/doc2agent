@@ -134,6 +134,12 @@ def _execute(session: AgentSession, endpoint: Endpoint, args: dict):
     )
 
 
+def routing_event(selected: list[Endpoint], categories: list[str]) -> dict:
+    """The routing decision, with the exact tools this turn exposes, for the page to draw."""
+    return {"type": "routing", "categories": categories, "tool_count": len(selected),
+            "tools": [f"{ep.method} {ep.path}" for ep in selected]}
+
+
 def run_agent_events(
     session: AgentSession, user_message: str, interactive: bool = False
 ) -> Iterator[dict]:
@@ -145,7 +151,7 @@ def run_agent_events(
 
     selected, categories = select_endpoints(user_message, session.endpoints, client)
     if categories is not None:
-        yield {"type": "routing", "categories": categories, "tool_count": len(selected)}
+        yield routing_event(selected, categories)
     tool_schemas, registry = build_toolset(selected)
 
     models = candidates("agent", AGENT_MODELS)

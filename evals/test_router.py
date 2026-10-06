@@ -85,3 +85,12 @@ def test_hallucinated_category_is_ignored(digitalocean):
     )
     assert categories == ["droplets"]
     assert {category_of(e.path) for e in selected} == {"droplets"}
+
+
+def test_routing_event_names_the_tools_this_turn_exposes():
+    from app.agent import routing_event
+    from app.models import Endpoint
+    selected = [Endpoint(method="GET", path="/v2/droplets"), Endpoint(method="POST", path="/v2/volumes")]
+    ev = routing_event(selected, ["droplets", "volumes"])
+    assert ev == {"type": "routing", "categories": ["droplets", "volumes"], "tool_count": 2,
+                  "tools": ["GET /v2/droplets", "POST /v2/volumes"]}
