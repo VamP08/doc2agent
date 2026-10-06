@@ -30,7 +30,7 @@
   --r:6px; --r-sm:4px; --r-xs:3px;
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:28px; --s7:40px;
   --bg:#06080d; --rail:#080b12; --panel:#0c1018; --panel-2:#111726; --sunk:#04060a;
-  --line:#18202e; --line-2:#222c3f; --line-3:#33405a;
+  --line:#1c2534; --line-2:#263146; --line-3:#36445f;
   --ink:#e9eef7; --ink-2:#aebbcd; --ink-3:#8797ac; --ink-4:#7f8fa6;
   --blue:#3b82f6; --blue-2:#60a5fa; --blue-ink:#93bbfd; --blue-dim:#0f1d38; --blue-line:#26437a;
   --ok:#34d399; --ok-dim:#08251c; --warn:#fbbf24; --warn-dim:#241b06; --err:#f87171; --err-dim:#2a1113;
@@ -89,20 +89,21 @@ kbd{font:400 var(--t-micro) var(--mono);padding:2px 5px;border:1px solid current
 /* ═══ app frame ═══ */
 .app{display:grid;grid-template-columns:216px minmax(0,1fr);height:100dvh}
 .rail{background:var(--rail);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
-.rail .brand{display:flex;align-items:center;gap:10px;padding:var(--s4) var(--s5);
+.rail .brand{display:flex;align-items:center;gap:12px;padding:18px var(--s5);
   border-bottom:1px solid var(--line)}
-.rail .brand .mark{width:28px;height:28px;flex:none;display:block}
+.rail .brand .mark{width:34px;height:34px;flex:none;display:block}
 .rail .brand .nm{font:600 19px/1 var(--ui);color:var(--ink);letter-spacing:-.05em}
 .rail .brand .nm b{color:var(--blue-2);font-weight:600}
 .rail .brand .nm i{font-style:normal;color:var(--ink-4);font-weight:500;letter-spacing:0;
   display:block;font-size:11.5px;margin-top:4px;letter-spacing:.11em;text-transform:uppercase}
-.rail .brand .nm{font:600 14px/1 var(--ui);color:var(--ink);letter-spacing:-.01em}
+.rail .brand .nm{font:700 21px/1 var(--ui);color:var(--ink);letter-spacing:-.025em}
+.rail .brand .nm b{color:var(--blue-2);font-weight:700}
 .rail .grp{padding:var(--s4) 0 var(--s2)}
 .rail .grp .lbl{display:none}
-.ni{display:flex;align-items:center;gap:9px;height:32px;padding:0 var(--s3);
-  color:var(--ink-4);font:400 var(--t-ans)/1 var(--ui);width:100%;text-align:left;
+.ni{display:flex;align-items:center;gap:9px;height:36px;padding:0 var(--s4);
+  color:var(--ink-3);font:500 15.5px/1 var(--ui);width:100%;text-align:left;
   border-left:2px solid transparent}
-.ni:hover{color:var(--ink-2)}
+.ni:hover{color:var(--ink)}
 .ni[aria-current=page]{color:var(--ink);border-left-color:var(--blue);font-weight:600}
 .ni .ic{display:none}
 .ni .c{margin-left:auto;font:400 var(--t-micro)/1 var(--mono);color:var(--ink-4)}
@@ -119,12 +120,16 @@ kbd{font:400 var(--t-micro) var(--mono);padding:2px 5px;border:1px solid current
 .rail .ctx button{margin-top:9px;width:100%;height:26px;border-radius:var(--r-xs);border:1px solid var(--line-2);
   color:var(--ink-3);font:500 11.5px/1 var(--ui)}
 .rail .ctx button:hover{border-color:var(--line-3);color:var(--ink)}
-.rail .who{display:flex;align-items:center;gap:9px;padding:var(--s3) var(--s4);border-top:1px solid var(--line);
-  font-size:12px;color:var(--ink-3)}
-.rail .who .av{width:24px;height:24px;border-radius:50%;background:var(--panel-2);border:1px solid var(--line-2);
-  display:grid;place-items:center;font:600 11.5px/1 var(--ui);color:var(--ink-3)}
+.rail .who{display:flex;align-items:center;gap:9px;padding:var(--s3) var(--s5);border-top:1px solid var(--line);
+  font:500 13px var(--ui);color:var(--ink-3)}
+.rail .who:hover{color:var(--ink)}
+.rail .who svg{width:16px;height:16px;flex:none}
+
 
 .work{display:flex;flex-direction:column;min-width:0;min-height:0}
+.mbrand{display:none;align-items:center;gap:8px;flex:none;margin-right:var(--s2)}
+.mbrand b{font:700 16px/1 var(--ui);color:var(--ink);letter-spacing:-.02em}
+.mbrand i{font-style:normal;color:var(--blue-2)}
 .top{display:flex;align-items:center;gap:var(--s3);padding:0 var(--s5);height:52px;border-bottom:1px solid var(--line);
   flex:none}
 .crumb{display:flex;align-items:center;gap:var(--s2);font-size:var(--t-data);color:var(--ink-4);min-width:0}
@@ -150,7 +155,7 @@ kbd{font:400 var(--t-micro) var(--mono);padding:2px 5px;border:1px solid current
 .linkbtn:hover{color:var(--ink)}
 .hero{display:flex;align-items:flex-end;gap:18px;margin:0 0 24px;flex:none}
 .hero .n{font:700 72px/.9 var(--ui);color:var(--blue);letter-spacing:-.03em}
-.hero .hcap{font:400 16px/1.45 var(--ui);color:var(--ink-2);padding-bottom:6px;max-width:34ch}
+.hero .hcap{font:400 16px/1.45 var(--ui);color:var(--ink-2);padding-bottom:6px;max-width:34ch;text-wrap:balance}
 
 /* conversation */
 .thread{overflow:auto;flex:1;min-height:0;padding-bottom:24px;
@@ -159,7 +164,7 @@ kbd{font:400 var(--t-micro) var(--mono);padding:2px 5px;border:1px solid current
 .turn{padding:0 0 var(--s6)}
 .turn+.turn{border-top:1px solid var(--line);padding-top:var(--s6)}
 .turn .side-tag{display:inline-flex;margin-bottom:var(--s2)}
-.ask{font:500 21px/1.35 var(--ui);color:var(--ink);max-width:60ch;overflow-wrap:anywhere;
+.ask{font:500 21px/1.35 var(--ui);color:var(--ink);max-width:60ch;overflow-wrap:anywhere;text-wrap:balance;
   letter-spacing:-.012em;margin-bottom:6px}
 .call{display:grid;grid-template-columns:6ch minmax(0,1fr) auto;gap:10px;align-items:center;padding-top:12px;
   font:400 var(--t-data)/1.4 var(--mono);color:var(--ink-2)}
@@ -177,6 +182,7 @@ kbd{font:400 var(--t-micro) var(--mono);padding:2px 5px;border:1px solid current
 .held .sends{display:flex;flex-wrap:wrap;gap:6px 18px;font:400 var(--t-data)/1.4 var(--mono);color:var(--ink)}
 .held .sends i{font-style:normal;color:var(--ink-4);margin-right:4px}
 .held .acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.held .acts .btn{height:42px;padding:0 22px;font-size:15px;border-radius:var(--r)}
 .held .acts input{flex:1;min-width:180px;height:34px;border-bottom:1px solid var(--line-2);
   font:400 var(--t-data) var(--ui)}
 .held .acts input:focus{border-bottom-color:var(--blue)}
@@ -269,6 +275,9 @@ a.btn{text-decoration:none;width:fit-content}
   transform-origin:left}
 .chip-row.hit::before{border-top-color:var(--blue);animation:draw .4s ease-out}
 @keyframes draw{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.rise{animation:rise .28s cubic-bezier(.16,1,.3,1) both}
+@media(prefers-reduced-motion:reduce){.rise{animation:none}}
 .chip{font:400 12px/1.2 var(--mono);padding:6px 9px;margin:3px 0;border:1px solid var(--line);
   border-radius:var(--r-sm);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   transition:opacity .3s,border-color .3s,background-color .3s,color .3s}
@@ -354,6 +363,10 @@ a.btn{text-decoration:none;width:fit-content}
   .split.d{display:block;flex:none}
   .sess{display:block;padding:var(--s5) var(--s4)}
   .crumb .mono,.crumb .sep{display:none}
+  .mbrand{display:flex}
+  .crumb{flex:1;min-width:0}
+  .crumb b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .crumb .page{display:none}
   #view-start{overflow:auto}
   .detail{border-left:0;border-top:1px solid var(--line);padding:var(--s5) var(--s4)}
   .start{padding-top:var(--s5)}
@@ -369,7 +382,7 @@ a.btn{text-decoration:none;width:fit-content}
 
 <div class="app">
   <nav class="rail" aria-label="Workspace">
-    <div class="brand"><svg class="mark" width="28" height="28" viewBox="0 0 256 256" aria-hidden="true" fill="var(--blue)"><path fill-rule="evenodd" d="M52 36H124L156 68V204A16 16 0 0 1 140 220H52A16 16 0 0 1 36 204V52A16 16 0 0 1 52 36Z M70 74H126A10 10 0 0 1 126 94H70A10 10 0 0 1 70 74Z M70 118H126A10 10 0 0 1 126 138H70A10 10 0 0 1 70 118Z M70 162H126A10 10 0 0 1 126 182H70A10 10 0 0 1 70 162Z"/><path d="M156 74H190V94H156Z M156 118H190V138H156Z M156 162H190V182H156Z"/><circle cx="204" cy="84" r="16"/><circle cx="204" cy="128" r="16"/><circle cx="204" cy="172" r="16"/></svg><span class="nm">doc<b>2</b>agent</span></div>
+    <div class="brand"><svg class="mark" width="34" height="34" viewBox="0 0 256 256" aria-hidden="true" fill="var(--blue)"><path fill-rule="evenodd" d="M52 36H124L156 68V204A16 16 0 0 1 140 220H52A16 16 0 0 1 36 204V52A16 16 0 0 1 52 36Z M70 74H126A10 10 0 0 1 126 94H70A10 10 0 0 1 70 74Z M70 118H126A10 10 0 0 1 126 138H70A10 10 0 0 1 70 118Z M70 162H126A10 10 0 0 1 126 182H70A10 10 0 0 1 70 162Z"/><path d="M156 74H190V94H156Z M156 118H190V138H156Z M156 162H190V182H156Z"/><circle cx="204" cy="84" r="16"/><circle cx="204" cy="128" r="16"/><circle cx="204" cy="172" r="16"/></svg><span class="nm">doc<b>2</b>agent</span></div>
     <div class="grp">
       <button class="ni" data-view="agent" aria-current="page">
         Session<span class="c hot" id="nav-held" hidden>1 held</span></button>
@@ -388,11 +401,12 @@ a.btn{text-decoration:none;width:fit-content}
       <div class="s" id="ctx-src"></div>
       <button id="change-api">Load another API</button>
     </div>
-    <div class="who"><span class="av">d2</span><span>Local session</span></div>
+    <a class="who" href="https://github.com/VamP08/doc2agent" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span>Source on GitHub</span></a>
   </nav>
 
   <div class="work">
     <header class="top">
+      <span class="mbrand" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 256 256" aria-hidden="true" fill="var(--blue)"><path fill-rule="evenodd" d="M52 36H124L156 68V204A16 16 0 0 1 140 220H52A16 16 0 0 1 36 204V52A16 16 0 0 1 52 36Z M70 74H126A10 10 0 0 1 126 94H70A10 10 0 0 1 70 74Z M70 118H126A10 10 0 0 1 126 138H70A10 10 0 0 1 70 118Z M70 162H126A10 10 0 0 1 126 182H70A10 10 0 0 1 70 162Z"/><path d="M156 74H190V94H156Z M156 118H190V138H156Z M156 162H190V182H156Z"/><circle cx="204" cy="84" r="16"/><circle cx="204" cy="128" r="16"/><circle cx="204" cy="172" r="16"/></svg><b>doc<i>2</i>agent</b></span>
       <div class="crumb">
         <b id="crumb-api">New session</b>
         <span class="sep" id="crumb-sep" hidden>/</span>
@@ -918,6 +932,7 @@ function addTurn(question, sideTag) {
           <span class="p">${pathCell(path)}</span><span class="st${bad ? " bad" : ""}">${esc(status)}</span></div>` +
         (count != null && !isWrite(method) && !bad
           ? `<div class="got">→ ${count} ${esc(noun.replace(/[_-]/g, " "))}</div>` : "");
+      row.className = "rise";
       this.el.insertBefore(row, this.el.querySelector(".held") || this.el.querySelector(".said"));
     },
     hold(ev) {
@@ -925,7 +940,7 @@ function addTurn(question, sideTag) {
       const sent = Object.entries(ev.args || {})       // what will be written; path params are already in the path
         .filter(([k, v]) => v != null && !ev.path.includes("{" + k + "}"));
       const h = document.createElement("div");
-      h.className = "held";
+      h.className = "held rise";
       h.innerHTML = `<div class="lbl"><i class="dot"></i>Waiting for you</div>
         <div class="big"><span style="color:${METHOD_COLOR[ev.method] || "var(--ink)"}">${esc(ev.method)}</span> ${esc(path)}</div>
         ${sent.length ? `<div class="sends">${sent.map(([k, v]) =>
@@ -939,7 +954,7 @@ function addTurn(question, sideTag) {
     release() { const h = this.el.querySelector(".held"); if (h) h.remove(); },
     say(text, cls) {
       const s = this.el.querySelector(".said");
-      s.className = "said" + (cls ? " " + cls : "");
+      s.className = "said rise" + (cls ? " " + cls : "");
       if (cls) s.textContent = text; else s.innerHTML = md(text);
     },
   };
