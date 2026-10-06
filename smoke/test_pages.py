@@ -15,7 +15,7 @@ def test_replay_holds_the_write_and_approve_plays_the_recorded_outcome(page, bas
 def test_pages_render_after_handing_over_to_a_live_session(page, base_url, errors):
     page.goto(base_url + "/")
     page.wait_for_selector(".held")
-    page.click('.ni[data-view="calls"]')                       # hands over: replay stops, AeroTrack ingests live
+    page.click('.ni[data-view="calls"]')  # hands over: replay stops, AeroTrack ingests live
     page.wait_for_function("() => !!state.sessionId")
     assert page.locator("#calls-panel").is_visible()
     assert page.locator("#calls-empty").is_visible()
@@ -26,7 +26,9 @@ def test_pages_render_after_handing_over_to_a_live_session(page, base_url, error
     assert "origin_city" in page.inner_text("#ep-detail")
 
     page.click('.ni[data-view="export"]')
-    page.wait_for_function("() => document.getElementById('x-name').textContent.endsWith('_mcp.py')")
+    page.wait_for_function(
+        "() => document.getElementById('x-name').textContent.endsWith('_mcp.py')"
+    )
     assert "@mcp.tool()" in page.inner_text("#x-code")
     assert errors == []
 

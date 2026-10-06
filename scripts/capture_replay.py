@@ -9,6 +9,7 @@ The same prompt runs twice, denying the held write once and then approving it. B
 same request, so the deny outcome belongs to the request on screen, and neither may ask for a second
 approval. Anything else is retried.
 """
+
 import argparse
 import json
 import threading
@@ -26,14 +27,18 @@ OUT = Path(__file__).resolve().parent.parent / "static" / "replay.json"
 
 def resolve(base: str, approval_id: str, approve: bool) -> None:
     body = {"approve": approve, "reason": "" if approve else DENY_REASON}
-    threading.Thread(target=lambda: httpx.post(f"{base}/api/approvals/{approval_id}", json=body, timeout=30)).start()
+    threading.Thread(
+        target=lambda: httpx.post(f"{base}/api/approvals/{approval_id}", json=body, timeout=30)
+    ).start()
 
 
 def run(base: str, approve: bool) -> tuple[dict, list, list]:
     with httpx.Client(base_url=base, timeout=180) as c:
         ing = c.post("/api/ingest", json={"url": f"{base}/demo/openapi.json"}).json()
         prefix, tail, t0, t_gate = [], [], time.monotonic(), None
-        with c.stream("POST", "/api/chat/stream", json={"session_id": ing["session_id"], "message": PROMPT}) as r:
+        with c.stream(
+            "POST", "/api/chat/stream", json={"session_id": ing["session_id"], "message": PROMPT}
+        ) as r:
             for line in r.iter_lines():
                 if not line.startswith("data: "):
                     continue
@@ -48,15 +53,20 @@ def run(base: str, approve: bool) -> tuple[dict, list, list]:
                         resolve(base, ev["approval_id"], approve)
                 else:
                     tail.append({"t": round((now - t_gate) * 1000), "ev": ev})
-                    if ev["type"] == "approval_required":  # a second write: unblock it, reject the run
+                    if (
+                        ev["type"] == "approval_required"
+                    ):  # a second write: unblock it, reject the run
                         resolve(base, ev["approval_id"], False)
         return ing, prefix, tail
 
 
 def usable(prefix: list, tail: list, approved: bool) -> bool:
     return bool(
-        prefix and prefix[-1]["ev"]["type"] == "approval_required"
-        and tail and tail[0]["ev"]["type"] == "approval_result" and tail[0]["ev"]["approved"] is approved
+        prefix
+        and prefix[-1]["ev"]["type"] == "approval_required"
+        and tail
+        and tail[0]["ev"]["type"] == "approval_result"
+        and tail[0]["ev"]["approved"] is approved
         and tail[-1]["ev"]["type"] == "reply"
         and not any(e["ev"]["type"] in ("approval_required", "error") for e in tail)
     )
@@ -83,18 +93,30 @@ def main() -> None:
         ing, prefix, yes = run(base, approve=True)
         if usable(prefix, yes, True) and held(prefix) == held(prefix_no):
             break
-        print(f"attempt {attempt}: approve run unusable or held a different request "
-              f"({held(prefix) if prefix and prefix[-1]['ev']['type'] == 'approval_required' else 'no hold'} "
-              f"vs {held(prefix_no)}), retrying")
+        print(
+            f"attempt {attempt}: approve run unusable or held a different request "
+            f"({held(prefix) if prefix and prefix[-1]['ev']['type'] == 'approval_required' else 'no hold'} "
+            f"vs {held(prefix_no)}), retrying"
+        )
     else:
         raise SystemExit("could not record two matching runs")
     ingest = {k: ing[k] for k in ("source", "api_title", "api_description", "endpoints")}
     ingest["base_url"] = "/demo"
-    OUT.write_text(json.dumps({
-        "recorded_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "model": args.model, "prompt": PROMPT, "ingest": ingest, "deny_reason": DENY_REASON,
-        "prefix": prefix, "branches": {"approve": yes, "deny": no},
-    }, indent=1), encoding="utf-8")
+    OUT.write_text(
+        json.dumps(
+            {
+                "recorded_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "model": args.model,
+                "prompt": PROMPT,
+                "ingest": ingest,
+                "deny_reason": DENY_REASON,
+                "prefix": prefix,
+                "branches": {"approve": yes, "deny": no},
+            },
+            indent=1,
+        ),
+        encoding="utf-8",
+    )
     print(f"wrote {OUT} · {len(prefix)} events to the gate, {len(yes)}/{len(no)} after it")
 
 

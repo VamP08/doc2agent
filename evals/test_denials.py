@@ -1,4 +1,5 @@
 """A denied write must not become a standing ban for the rest of the session."""
+
 import json
 
 from app.agent import DENIAL_MARKER, drop_denied_calls

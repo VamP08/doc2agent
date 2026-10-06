@@ -1,0 +1,6 @@
+line-length = 100
+
+[lint]
+# Broad catches sit at boundaries on purpose: an error becomes an HTTP response or a trace
+# entry, and the simulator and keep-alive loops must never die.
+ignore = ["BLE001", "S110", "S112"]

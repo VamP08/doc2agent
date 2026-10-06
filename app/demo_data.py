@@ -4,6 +4,7 @@ The simulator mutates the store every few seconds — new shipments arrive,
 statuses advance, couriers get freed — so the monitor dashboard always has
 live motion, and agent-made changes land in the same store viewers watch.
 """
+
 import asyncio
 import random
 from collections import deque
@@ -128,7 +129,11 @@ def _advance(shipment: dict) -> None:
         set_status(shipment, "in_transit", "Delay resolved, back on route")
         return
     if _rng.random() < 0.08 and status == "in_transit":
-        set_status(shipment, "delayed", _rng.choice(["Traffic congestion", "Weather hold", "Vehicle breakdown"]))
+        set_status(
+            shipment,
+            "delayed",
+            _rng.choice(["Traffic congestion", "Weather hold", "Vehicle breakdown"]),
+        )
         return
     next_status = STATUS_FLOW[STATUS_FLOW.index(status) + 1]
     if next_status == "picked_up" and not shipment["courier_id"]:

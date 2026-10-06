@@ -5,6 +5,7 @@ went 404 mid-project and took every chat down while the app still looked
 healthy. Hardcoding one name means the next retirement is another outage, so
 each role has a candidate list and the first model that answers wins.
 """
+
 import os
 import re
 import time
@@ -24,7 +25,7 @@ _GONE = ("model_not_found", "does not exist", "decommissioned", "has been deprec
 # tokens per minute. A spent daily budget sits out until Groq says it frees up;
 # a per-minute cap is waited out on the same model.
 _RETRY_IN = re.compile(r"try again in (?:(\d+)h)?(?:(\d+)m)?([\d.]+)s")
-_cooldown: dict[str, float] = {}   # ponytail: per process; a second worker learns the hard way
+_cooldown: dict[str, float] = {}  # ponytail: per process; a second worker learns the hard way
 
 
 def _retry_after(message: str) -> float | None:
@@ -71,6 +72,4 @@ def complete(client: Groq, models: list[str], **kwargs):
                 break
     if last is not None and "rate_limit_exceeded" in str(last):
         raise last
-    raise NoModelAvailable(
-        f"None of {models} are available on this Groq account: {last}"
-    )
+    raise NoModelAvailable(f"None of {models} are available on this Groq account: {last}")

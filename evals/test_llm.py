@@ -1,5 +1,5 @@
 """Model failover: a retired model must not take the app down."""
-import os
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,15 +11,20 @@ RETIRED = Exception(
     "`llama-3.3-70b-versatile` does not exist or you do not have access to it.'}}"
 )
 RATE_LIMITED = Exception("Error code: 429 - rate_limit_exceeded: tokens per day")
-DAILY_CAP = Exception("Error code: 429 - rate_limit_exceeded: Rate limit reached for model `a` "
-                      "on tokens per day (TPD): Limit 200000, Used 199641. Please try again in 15m59.9s.")
-MINUTE_CAP = Exception("Error code: 429 - rate_limit_exceeded: Rate limit reached for model `a` "
-                       "on tokens per minute (TPM): Limit 8000, Used 7200. Please try again in 12.5s.")
+DAILY_CAP = Exception(
+    "Error code: 429 - rate_limit_exceeded: Rate limit reached for model `a` "
+    "on tokens per day (TPD): Limit 200000, Used 199641. Please try again in 15m59.9s."
+)
+MINUTE_CAP = Exception(
+    "Error code: 429 - rate_limit_exceeded: Rate limit reached for model `a` "
+    "on tokens per minute (TPM): Limit 8000, Used 7200. Please try again in 12.5s."
+)
 
 
 @pytest.fixture(autouse=True)
 def fresh_cooldowns():
     from app import llm
+
     llm._cooldown.clear()
     yield
     llm._cooldown.clear()
@@ -52,7 +57,7 @@ def test_daily_cap_moves_to_the_next_model_and_skips_it_after():
     client.chat.completions.create.side_effect = ["ok"]
     complete(client, ["a", "b"], messages=[])
     used = [c.kwargs["model"] for c in client.chat.completions.create.call_args_list]
-    assert used == ["a", "b", "b"]          # "a" is not asked again while its budget is spent
+    assert used == ["a", "b", "b"]  # "a" is not asked again while its budget is spent
 
 
 def test_per_minute_cap_waits_and_retries_the_same_model(monkeypatch):
@@ -98,9 +103,11 @@ def test_no_retired_model_names_remain_in_defaults():
 
 def test_per_minute_limit_says_wait_a_minute_not_come_back_later():
     from app.main import _agent_error_detail
-    tpm = Exception("Error code: 429 - rate_limit_exceeded: Rate limit reached for model "
-                    "`openai/gpt-oss-120b` on tokens per minute (TPM): Limit 8000, Used 7200")
+
+    tpm = Exception(
+        "Error code: 429 - rate_limit_exceeded: Rate limit reached for model "
+        "`openai/gpt-oss-120b` on tokens per minute (TPM): Limit 8000, Used 7200"
+    )
     detail = _agent_error_detail(tpm)
     assert "minute" in detail and "few hours" not in detail
     assert "few hours" in _agent_error_detail(RATE_LIMITED)
-

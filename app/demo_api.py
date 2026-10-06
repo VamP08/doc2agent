@@ -5,7 +5,8 @@ demo_data.py. FastAPI auto-generates its OpenAPI spec at /demo/openapi.json
 and human docs at /demo/docs — so the same app demonstrates both ingestion
 paths and every request shows up on the live monitor.
 """
-from typing import Literal, Optional
+
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from pydantic import BaseModel, Field
@@ -41,9 +42,9 @@ class ShipmentCreate(BaseModel):
 
 
 class StatusUpdate(BaseModel):
-    status: Literal["created", "picked_up", "in_transit", "out_for_delivery", "delivered", "delayed"] = Field(
-        description="New shipment status"
-    )
+    status: Literal[
+        "created", "picked_up", "in_transit", "out_for_delivery", "delivered", "delayed"
+    ] = Field(description="New shipment status")
     note: str = Field(default="", description="Optional note explaining the change")
 
 
@@ -60,9 +61,14 @@ def _get_shipment(shipment_id: str) -> dict:
 
 @demo_app.get("/shipments", summary="List shipments, filterable by status, city and priority")
 def list_shipments(
-    status: Optional[str] = Query(None, description="Filter by status: created, picked_up, in_transit, out_for_delivery, delivered, delayed"),
-    city: Optional[str] = Query(None, description="Match shipments whose origin OR destination is this city"),
-    priority: Optional[str] = Query(None, description="Filter by priority: standard or express"),
+    status: str | None = Query(
+        None,
+        description="Filter by status: created, picked_up, in_transit, out_for_delivery, delivered, delayed",
+    ),
+    city: str | None = Query(
+        None, description="Match shipments whose origin OR destination is this city"
+    ),
+    priority: str | None = Query(None, description="Filter by priority: standard or express"),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
 ):
     result = list(db.shipments.values())
@@ -73,9 +79,10 @@ def list_shipments(
     if priority:
         result = [s for s in result if s["priority"] == priority.lower()]
     result.sort(key=lambda s: s["updated_at"], reverse=True)
-    return {"count": len(result[:limit]), "shipments": [
-        {k: v for k, v in s.items() if k != "events"} for s in result[:limit]
-    ]}
+    return {
+        "count": len(result[:limit]),
+        "shipments": [{k: v for k, v in s.items() if k != "events"} for s in result[:limit]],
+    }
 
 
 @demo_app.post("/shipments", status_code=201, summary="Create a new shipment")
@@ -83,7 +90,11 @@ def create_shipment(body: ShipmentCreate):
     if body.origin_city.title() == body.dest_city.title():
         raise HTTPException(422, "Origin and destination must differ")
     return db.create_shipment(
-        body.origin_city.title(), body.dest_city.title(), body.weight_kg, body.priority, actor="agent"
+        body.origin_city.title(),
+        body.dest_city.title(),
+        body.weight_kg,
+        body.priority,
+        actor="agent",
     )
 
 
@@ -114,14 +125,16 @@ def assign_courier(shipment_id: str, body: CourierAssign):
     if not courier:
         raise HTTPException(404, f"Courier '{body.courier_id}' not found")
     if courier["status"] != "idle":
-        raise HTTPException(422, f"Courier {courier['id']} is busy ({courier['active_shipments']} active)")
+        raise HTTPException(
+            422, f"Courier {courier['id']} is busy ({courier['active_shipments']} active)"
+        )
     db.assign_courier(shipment, courier, actor="agent")
     return shipment
 
 
 @demo_app.get("/couriers", summary="List couriers, filterable by status")
 def list_couriers(
-    status: Optional[str] = Query(None, description="Filter by courier status: idle or on_route"),
+    status: str | None = Query(None, description="Filter by courier status: idle or on_route"),
 ):
     result = list(db.couriers.values())
     if status:
@@ -134,8 +147,11 @@ def get_courier(courier_id: str):
     courier = db.couriers.get(courier_id.upper())
     if not courier:
         raise HTTPException(404, f"Courier '{courier_id}' not found")
-    active = [s["id"] for s in db.shipments.values()
-              if s["courier_id"] == courier["id"] and s["status"] != "delivered"]
+    active = [
+        s["id"]
+        for s in db.shipments.values()
+        if s["courier_id"] == courier["id"] and s["status"] != "delivered"
+    ]
     return {**courier, "assigned_shipments": active}
 
 
@@ -154,10 +170,13 @@ def stats_overview():
         "by_status": by_status,
         "express_share": round(
             sum(1 for s in db.shipments.values() if s["priority"] == "express")
-            / max(1, len(db.shipments)), 2),
+            / max(1, len(db.shipments)),
+            2,
+        ),
         "idle_couriers": sum(1 for c in db.couriers.values() if c["status"] == "idle"),
         "busiest_courier": max(
-            db.couriers.values(), key=lambda c: c["active_shipments"], default=None),
+            db.couriers.values(), key=lambda c: c["active_shipments"], default=None
+        ),
     }
 
 

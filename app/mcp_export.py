@@ -5,6 +5,7 @@ an MCP tool, so the agent Doc2Agent synthesized becomes usable from Claude
 Desktop, Cursor, or any MCP client. The generated file depends only on
 `mcp` and `httpx`.
 """
+
 import json
 import keyword
 import re
@@ -66,11 +67,11 @@ def _request(method: str, path: str, locations: dict, values: dict) -> str:
 
 '''
 
-FOOTER = '''
+FOOTER = """
 
 if __name__ == "__main__":
     mcp.run()
-'''
+"""
 
 
 def _py_ident(name: str, used: set) -> str:
@@ -98,9 +99,7 @@ def _fn_name(endpoint: Endpoint, index: int, used: set) -> str:
 def generate_mcp_server(base_url: str, endpoints: list[Endpoint], title: str) -> str:
     name = re.sub(r"[^a-zA-Z0-9_-]+", "-", title.lower()).strip("-") or "doc2agent-api"
     filename = f"{name.replace('-', '_')}_mcp.py"
-    parts = [
-        HEADER_TEMPLATE.format(title=title, filename=filename, name=name, base_url=base_url)
-    ]
+    parts = [HEADER_TEMPLATE.format(title=title, filename=filename, name=name, base_url=base_url)]
     used_fn_names: set = set()
 
     for i, ep in enumerate(endpoints[:MAX_TOOLS]):
@@ -122,13 +121,15 @@ def generate_mcp_server(base_url: str, endpoints: list[Endpoint], title: str) ->
         doc = f"{ep.method} {ep.path}"
         if ep.description:
             doc += f" — {ep.description}"
-        docstring = doc + ("\n\n    Args:\n" + "\n".join(param_doc_lines) if param_doc_lines else "")
+        docstring = doc + (
+            "\n\n    Args:\n" + "\n".join(param_doc_lines) if param_doc_lines else ""
+        )
 
         parts.append(
-            f'@mcp.tool()\n'
-            f'def {fn}({sig}) -> str:\n'
+            f"@mcp.tool()\n"
+            f"def {fn}({sig}) -> str:\n"
             f'    """{docstring}"""\n'
-            f'    return _request({ep.method!r}, {ep.path!r}, {json.dumps(locations)}, locals())\n\n'
+            f"    return _request({ep.method!r}, {ep.path!r}, {json.dumps(locations)}, locals())\n\n"
         )
 
     parts.append(FOOTER)

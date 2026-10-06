@@ -1,5 +1,5 @@
 """Golden-spec ingestion tests — offline, run on every CI push."""
-import json
+
 from pathlib import Path
 
 import pytest

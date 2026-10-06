@@ -3,6 +3,7 @@
 Doc2Agent fetches user-supplied URLs and lets an agent fire real HTTP
 requests, so we validate every hostname before any request leaves the box.
 """
+
 import ipaddress
 import socket
 from urllib.parse import urlparse

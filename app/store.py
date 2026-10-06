@@ -1,4 +1,5 @@
 """SQLite persistence for agent sessions — sessions survive server restarts."""
+
 import json
 import os
 import sqlite3
@@ -44,7 +45,5 @@ def save_session(session_id: str, payload: dict) -> None:
 
 def load_session(session_id: str) -> dict | None:
     with _lock, _conn() as conn:
-        row = conn.execute(
-            "SELECT payload FROM sessions WHERE id = ?", (session_id,)
-        ).fetchone()
+        row = conn.execute("SELECT payload FROM sessions WHERE id = ?", (session_id,)).fetchone()
     return json.loads(row[0]) if row else None

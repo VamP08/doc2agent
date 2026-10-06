@@ -1,4 +1,5 @@
 """AeroTrack demo API contract tests — offline, in-process TestClient."""
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -28,7 +29,12 @@ def test_list_and_filter_shipments(client):
 def test_create_shipment_and_events(client):
     resp = client.post(
         "/demo/shipments",
-        json={"origin_city": "Delhi", "dest_city": "Chennai", "weight_kg": 3, "priority": "express"},
+        json={
+            "origin_city": "Delhi",
+            "dest_city": "Chennai",
+            "weight_kg": 3,
+            "priority": "express",
+        },
     )
     assert resp.status_code == 201
     shipment = resp.json()
@@ -38,9 +44,7 @@ def test_create_shipment_and_events(client):
 
 
 def test_same_origin_dest_rejected(client):
-    resp = client.post(
-        "/demo/shipments", json={"origin_city": "Pune", "dest_city": "Pune"}
-    )
+    resp = client.post("/demo/shipments", json={"origin_city": "Pune", "dest_city": "Pune"})
     assert resp.status_code == 422
 
 

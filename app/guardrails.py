@@ -4,6 +4,7 @@ Read-only calls (GET/HEAD) execute freely. Anything that mutates state
 (POST/PUT/PATCH/DELETE) pauses the agent until a human approves or denies it
 in the UI — unless the user has explicitly enabled auto-approve.
 """
+
 import threading
 import uuid
 
@@ -35,9 +36,7 @@ class ApprovalRegistry:
             }
         return approval_id
 
-    def wait(
-        self, approval_id: str, timeout: float = APPROVAL_TIMEOUT_S
-    ) -> tuple[bool, str]:
+    def wait(self, approval_id: str, timeout: float = APPROVAL_TIMEOUT_S) -> tuple[bool, str]:
         """Block the agent thread until resolved; timeout means denied.
 
         Returns (approved, reason). The reason is only ever set on a denial.

@@ -1,4 +1,5 @@
 """Doc2Agent — turn any API's documentation into a working AI agent."""
+
 import asyncio
 import json
 import os
@@ -15,21 +16,24 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import Depends, FastAPI, HTTPException, Request  # noqa: E402
-from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse  # noqa: E402
-from fastapi.staticfiles import StaticFiles  # noqa: E402
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 
-from . import demo_data, store  # noqa: E402
-from .agent import AgentSession, run_agent, run_agent_events  # noqa: E402
-from .demo_api import demo_app  # noqa: E402
-from .guardrails import APPROVALS  # noqa: E402
-from .ingest import ingest  # noqa: E402
-from .mcp_export import generate_mcp_server  # noqa: E402
-from .models import (  # noqa: E402
-    ApprovalDecision, ChatRequest, ChatResponse, IngestRequest, IngestResponse,
+from . import demo_data, store
+from .agent import AgentSession, run_agent, run_agent_events
+from .demo_api import demo_app
+from .guardrails import APPROVALS
+from .ingest import ingest
+from .mcp_export import generate_mcp_server
+from .models import (
+    ApprovalDecision,
+    ChatRequest,
+    ChatResponse,
+    IngestRequest,
+    IngestResponse,
 )
-from .safety import UnsafeURLError, trust_own_netloc  # noqa: E402
-
+from .safety import UnsafeURLError, trust_own_netloc
 
 # Render's free tier spins an instance down after 15 idle minutes. Pinging our
 # own public URL every 10 minutes keeps it warm; that is the platform's intended
@@ -126,18 +130,28 @@ def api_ingest(req: IngestRequest, request: Request) -> IngestResponse:
     )
     _save_session(session_id, session)
     return IngestResponse(
-        session_id=session_id, base_url=base_url, source=source, endpoints=endpoints,
-        api_title=api_title, api_description=api_description,
+        session_id=session_id,
+        base_url=base_url,
+        source=source,
+        endpoints=endpoints,
+        api_title=api_title,
+        api_description=api_description,
     )
 
 
 # The live demo shares one free model budget; this keeps one visitor (or a bot) from spending it.
 QUESTION_LIMIT, QUESTION_WINDOW_S = 20, 600
-QUESTIONS: dict[str, deque] = defaultdict(deque)  # ponytail: per process; a shared store if it ever runs multi-worker
+QUESTIONS: dict[str, deque] = defaultdict(
+    deque
+)  # ponytail: per process; a shared store if it ever runs multi-worker
 
 
 def question_budget(request: Request) -> None:
-    ip = (request.headers.get("x-forwarded-for") or (request.client.host if request.client else "")).split(",")[0].strip()
+    ip = (
+        (request.headers.get("x-forwarded-for") or (request.client.host if request.client else ""))
+        .split(",")[0]
+        .strip()
+    )
     now, asked = time.monotonic(), QUESTIONS[ip]
     while asked and now - asked[0] > QUESTION_WINDOW_S:
         asked.popleft()
@@ -146,8 +160,8 @@ def question_budget(request: Request) -> None:
         raise HTTPException(
             status_code=429,
             detail=f"This demo allows {QUESTION_LIMIT} questions per visitor every "
-                   f"{QUESTION_WINDOW_S // 60} minutes, so its shared model budget lasts. "
-                   f"Try again in {wait} minute{'' if wait == 1 else 's'}.",
+            f"{QUESTION_WINDOW_S // 60} minutes, so its shared model budget lasts. "
+            f"Try again in {wait} minute{'' if wait == 1 else 's'}.",
         )
     asked.append(now)
 
@@ -177,7 +191,7 @@ def api_chat_stream(req: ChatRequest) -> StreamingResponse:
             yield f"data: {json.dumps({'type': 'error', 'detail': _agent_error_detail(exc)})}\n\n"
         finally:
             _save_session(req.session_id, session)
-            yield "data: {\"type\": \"done\"}\n\n"
+            yield 'data: {"type": "done"}\n\n'
 
     return StreamingResponse(
         event_stream(),
@@ -243,9 +257,7 @@ def monitor_feed() -> dict:
     by_status: dict[str, int] = {}
     for s in demo_data.shipments.values():
         by_status[s["status"]] = by_status.get(s["status"], 0) + 1
-    recent = sorted(
-        demo_data.shipments.values(), key=lambda s: s["updated_at"], reverse=True
-    )[:14]
+    recent = sorted(demo_data.shipments.values(), key=lambda s: s["updated_at"], reverse=True)[:14]
     return {
         "stats": {
             "total": len(demo_data.shipments),

@@ -6,6 +6,7 @@ routing entirely. Above that, endpoints are clustered by their first path
 segment (deterministic, free) and a cheap LLM call picks the categories
 relevant to this question; only those endpoints become tools for the turn.
 """
+
 import json
 import re
 
@@ -30,7 +31,7 @@ category names most likely needed to answer the question. No prose.
 
 # Segments that carry no topic meaning, so grouping on them buckets a whole
 # API into one category. DigitalOcean prefixes all 659 of its paths with /v2.
-_NOISE_SEGMENT = re.compile(r"^(?:api|rest|v\d+(?:\.\d+)*|\d{4}-\d{2}-\d{2})$", re.I)
+_NOISE_SEGMENT = re.compile(r"^(?:api|rest|v\d+(?:\.\d+)*|\d{4}-\d{2}-\d{2})$", re.IGNORECASE)
 
 
 def category_of(path: str) -> str:
@@ -88,9 +89,7 @@ def select_endpoints(
         chosen_names = []
 
     if not chosen_names:  # router failed — largest categories as fallback
-        chosen_names = [
-            n for n, _ in sorted(groups.items(), key=lambda kv: -len(kv[1]))[:3]
-        ]
+        chosen_names = [n for n, _ in sorted(groups.items(), key=lambda kv: -len(kv[1]))[:3]]
 
     # Round-robin, not concatenate-then-truncate: DigitalOcean's gen-ai category
     # alone holds 119 endpoints, which would fill the budget and leave the other

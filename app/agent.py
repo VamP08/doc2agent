@@ -4,10 +4,10 @@ Events stream to the UI over SSE (tool calls appear live, write operations
 pause for human approval); the non-streaming wrapper `run_agent` consumes the
 same generator for the plain /api/chat endpoint and the eval harness.
 """
-import json
-from dataclasses import dataclass, field
-from typing import Iterator
 
+import json
+from collections.abc import Iterator
+from dataclasses import dataclass, field
 
 from .guardrails import APPROVALS, requires_approval
 from .llm import AGENT_MODELS, candidates, complete, groq_client
@@ -121,23 +121,29 @@ def drop_denied_calls(messages: list[dict]) -> None:
         m
         for m in messages
         if m.get("tool_call_id") not in denied_ids
-        and not any(
-            call.get("id") in denied_ids for call in (m.get("tool_calls") or [])
-        )
+        and not any(call.get("id") in denied_ids for call in (m.get("tool_calls") or []))
     ]
 
 
 def _execute(session: AgentSession, endpoint: Endpoint, args: dict):
     return execute_endpoint(
-        endpoint, args, session.base_url,
-        session.api_key, session.auth_header, session.auth_scheme,
+        endpoint,
+        args,
+        session.base_url,
+        session.api_key,
+        session.auth_header,
+        session.auth_scheme,
     )
 
 
 def routing_event(selected: list[Endpoint], categories: list[str]) -> dict:
     """The routing decision, with the exact tools this turn exposes, for the page to draw."""
-    return {"type": "routing", "categories": categories, "tool_count": len(selected),
-            "tools": [f"{ep.method} {ep.path}" for ep in selected]}
+    return {
+        "type": "routing",
+        "categories": categories,
+        "tool_count": len(selected),
+        "tools": [f"{ep.method} {ep.path}" for ep in selected],
+    }
 
 
 def run_agent_events(
@@ -203,13 +209,14 @@ def run_agent_events(
             if endpoint is None:
                 result = json.dumps({"error": f"Unknown tool {tc.function.name}"})
                 trace = ToolCallTrace(
-                    tool=tc.function.name, method="?", url="?", ok=False,
+                    tool=tc.function.name,
+                    method="?",
+                    url="?",
+                    ok=False,
                     summary="unknown tool",
                 )
                 yield {"type": "tool_result", "trace": trace.model_dump()}
-                session.messages.append(
-                    {"role": "tool", "tool_call_id": tc.id, "content": result}
-                )
+                session.messages.append({"role": "tool", "tool_call_id": tc.id, "content": result})
                 continue
 
             yield {
@@ -256,15 +263,15 @@ def run_agent_events(
             else:
                 result = json.dumps({"error": denial, "marker": DENIAL_MARKER})
                 trace = ToolCallTrace(
-                    tool=tc.function.name, method=endpoint.method,
+                    tool=tc.function.name,
+                    method=endpoint.method,
                     url=session.base_url.rstrip("/") + endpoint.path,
-                    ok=False, summary="✋ denied — human approval not given",
+                    ok=False,
+                    summary="✋ denied — human approval not given",
                 )
 
             yield {"type": "tool_result", "trace": trace.model_dump()}
-            session.messages.append(
-                {"role": "tool", "tool_call_id": tc.id, "content": result}
-            )
+            session.messages.append({"role": "tool", "tool_call_id": tc.id, "content": result})
 
     # Round limit reached: force a final text answer (no tools) so the user
     # gets an honest account of what succeeded and what didn't.

@@ -1,9 +1,18 @@
 """The recorded replay is well-formed and only uses events the page knows how to render."""
+
 import json
 from pathlib import Path
 
 REPLAY = Path(__file__).resolve().parent.parent / "static" / "replay.json"
-KNOWN = {"routing", "tool_call", "approval_required", "approval_result", "tool_result", "reply", "error"}
+KNOWN = {
+    "routing",
+    "tool_call",
+    "approval_required",
+    "approval_result",
+    "tool_result",
+    "reply",
+    "error",
+}
 
 
 def load():
@@ -28,7 +37,9 @@ def test_both_branches_resolve_and_answer():
     for name, approved in (("approve", True), ("deny", False)):
         events = d["branches"][name]
         assert all(e["ev"]["type"] in KNOWN for e in events)
-        assert events[0]["ev"]["type"] == "approval_result" and events[0]["ev"]["approved"] is approved
+        assert (
+            events[0]["ev"]["type"] == "approval_result" and events[0]["ev"]["approved"] is approved
+        )
         assert events[-1]["ev"]["type"] == "reply"
         # the replay handles one held write; a second one would stall playback
         assert not any(e["ev"]["type"] == "approval_required" for e in events)

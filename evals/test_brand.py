@@ -1,4 +1,5 @@
 """Brand assets are served where browsers look for them."""
+
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -30,5 +31,7 @@ def test_pages_are_revalidated_after_a_deploy():
 
 def test_link_previews_have_an_image():
     html = client.get("/").text
-    assert 'property="og:image" content="https://doc2agent.onrender.com/static/brand/og.png"' in html
+    assert (
+        'property="og:image" content="https://doc2agent.onrender.com/static/brand/og.png"' in html
+    )
     assert client.get("/static/brand/og.png").status_code == 200

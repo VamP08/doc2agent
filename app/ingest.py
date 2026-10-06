@@ -6,6 +6,7 @@ Two paths:
 2. LLM extraction — the URL is human-readable HTML docs: strip to text and
    have the model extract endpoint definitions as structured JSON.
 """
+
 import json
 from urllib.parse import urljoin, urlparse
 
@@ -100,7 +101,9 @@ def _openapi_params(operation: dict, path_item: dict, spec: dict) -> list[Param]
         params.append(
             Param(
                 name=p.get("name", ""),
-                location=p.get("in", "query") if p.get("in") in ("query", "path", "header") else "query",
+                location=p.get("in", "query")
+                if p.get("in") in ("query", "path", "header")
+                else "query",
                 type=schema.get("type") or p.get("type") or "string",
                 required=bool(p.get("required", False)),
                 description=(p.get("description") or "")[:300],
@@ -127,7 +130,7 @@ def _openapi_params(operation: dict, path_item: dict, spec: dict) -> list[Param]
 
 def parse_openapi(spec: dict, spec_url: str) -> tuple[str, list[Endpoint]]:
     """Extract (base_url, endpoints) from an OpenAPI 3.x or Swagger 2.0 spec."""
-    if "servers" in spec and spec["servers"]:
+    if spec.get("servers"):
         base_url = spec["servers"][0].get("url", "")
         base_url = urljoin(spec_url, base_url)  # resolves relative server URLs
     elif "host" in spec:  # Swagger 2.0

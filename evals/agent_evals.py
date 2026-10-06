@@ -7,6 +7,7 @@ the agent's own claim. Produces evals/scorecard.md.
 
 Run:  python -m evals.agent_evals
 """
+
 import os
 import re
 import sys
@@ -30,7 +31,8 @@ def api(method: str, path: str, **kwargs):
 
 def chat(session_id: str, message: str) -> dict:
     return api(
-        "POST", "/api/chat",
+        "POST",
+        "/api/chat",
         json={"session_id": session_id, "message": message, "auto_approve": True},
     )
 
@@ -42,6 +44,7 @@ def extract_shipment_id(text: str) -> str | None:
 
 # ---- tasks: (name, run(session_id) -> (passed, detail)) --------------------
 
+
 def task_count_warehouses(sid):
     reply = chat(sid, "How many warehouses are there in total? Answer with just the number.")
     truth = api("GET", "/demo/warehouses")["count"]
@@ -50,7 +53,9 @@ def task_count_warehouses(sid):
 
 
 def task_create_shipment(sid):
-    reply = chat(sid, "Create a standard shipment of 3 kg from Delhi to Chennai. Reply with its shipment ID.")
+    reply = chat(
+        sid, "Create a standard shipment of 3 kg from Delhi to Chennai. Reply with its shipment ID."
+    )
     shipment_id = extract_shipment_id(reply["reply"])
     if not shipment_id:
         return False, f"no SHP id in reply: {reply['reply'][:80]!r}"
@@ -73,7 +78,9 @@ def task_multi_hop_courier(sid):
     s = api("POST", "/demo/shipments", json={"origin_city": "Mumbai", "dest_city": "Delhi"})
     api("POST", f"/demo/shipments/{s['id']}/assign", json={"courier_id": idle[0]["id"]})
     reply = chat(sid, f"What is the NAME of the courier assigned to shipment {s['id']}?")
-    return idle[0]["name"] in reply["reply"], f"expected {idle[0]['name']}, reply: {reply['reply'][:80]!r}"
+    return idle[0]["name"] in reply[
+        "reply"
+    ], f"expected {idle[0]['name']}, reply: {reply['reply'][:80]!r}"
 
 
 def task_write_with_verification(sid):
@@ -82,9 +89,7 @@ def task_write_with_verification(sid):
     s = api("POST", "/demo/shipments", json={"origin_city": "Pune", "dest_city": "Hyderabad"})
     chat(sid, f"Mark shipment {s['id']} as picked_up with the note 'collected by eval'.")
     events = api("GET", f"/demo/shipments/{s['id']}/events")["events"]
-    agent_event = any(
-        e["status"] == "picked_up" and "Scanned" not in e["note"] for e in events
-    )
+    agent_event = any(e["status"] == "picked_up" and "Scanned" not in e["note"] for e in events)
     return agent_event, f"events: {[(e['status'], e['note']) for e in events]}"
 
 

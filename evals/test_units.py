@@ -1,7 +1,9 @@
 """Unit tests: tool synthesis, router clustering, MCP export, persistence."""
-import httpx
-from unittest.mock import patch
+
 import ast
+from unittest.mock import patch
+
+import httpx
 
 from app.agent import AgentSession
 from app.mcp_export import generate_mcp_server
@@ -32,8 +34,8 @@ def test_optional_params_accept_null():
     """Models pass null for skipped optionals; Groq validates against this schema,
     so a non-nullable optional kills the whole tool call with a 400."""
     schema = endpoint_to_tool(EP, 0)["function"]["parameters"]["properties"]
-    assert schema["verbose"]["type"] == ["boolean", "null"]   # optional -> nullable
-    assert schema["petId"]["type"] == "integer"               # required -> strict
+    assert schema["verbose"]["type"] == ["boolean", "null"]  # optional -> nullable
+    assert schema["petId"]["type"] == "integer"  # required -> strict
 
 
 def test_executor_skips_null_args():
@@ -47,16 +49,25 @@ def test_executor_skips_null_args():
         text = "{}"
 
     class FakeClient:
-        def __init__(self, **kw): pass
-        def __enter__(self): return self
-        def __exit__(self, *a): return False
+        def __init__(self, **kw):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
         def request(self, method, url, params=None, json=None, headers=None):
             captured.update(params=params, json=json, url=url)
             return FakeResp()
 
     from app import tools
-    with patch.object(tools.httpx, "Client", FakeClient), \
-         patch.object(tools, "assert_public_url", lambda url: None):
+
+    with (
+        patch.object(tools.httpx, "Client", FakeClient),
+        patch.object(tools, "assert_public_url", lambda url: None),
+    ):
         tools.execute_endpoint(EP, {"petId": 7, "verbose": None}, "https://api.example.com")
     assert captured["url"].endswith("/pets/7")
     assert captured["params"] is None  # the null optional was dropped, not sent
@@ -120,7 +131,7 @@ def test_session_roundtrip():
     assert restored.api_key == "k"
 
 
-from app.tools import result_count  # noqa: E402
+from app.tools import result_count
 
 
 def test_result_count_top_level_list():
@@ -138,11 +149,14 @@ def test_result_count_none_without_a_list():
 
 def test_trace_records_time_size_and_a_bounded_preview():
     from app import tools
+
     body = '{"items": [' + ",".join(['{"id": 1}'] * 400) + "]}"
     real_client = httpx.Client
     transport = httpx.MockTransport(lambda req: httpx.Response(200, text=body))
-    with patch.object(tools.httpx, "Client", lambda **kw: real_client(transport=transport, **kw)), \
-         patch.object(tools, "assert_public_url", lambda url: None):
+    with (
+        patch.object(tools.httpx, "Client", lambda **kw: real_client(transport=transport, **kw)),
+        patch.object(tools, "assert_public_url", lambda url: None),
+    ):
         _, trace = tools.execute_endpoint(EP, {"petId": 7}, "https://api.example.com")
     assert trace.ok and trace.status == 200
     assert trace.ms is not None and trace.ms >= 0
@@ -153,9 +167,13 @@ def test_trace_records_time_size_and_a_bounded_preview():
 
 def test_mcp_export_file_is_named_after_the_api():
     from fastapi.testclient import TestClient
+
     from app import main
     from app.agent import AgentSession
-    main.SESSIONS["export-test"] = AgentSession(base_url="https://api.example.com/v1", endpoints=[EP])
+
+    main.SESSIONS["export-test"] = AgentSession(
+        base_url="https://api.example.com/v1", endpoints=[EP]
+    )
     client = TestClient(main.app)
     named = client.get("/api/sessions/export-test/mcp", params={"name": "AeroTrack Logistics API"})
     assert 'filename="aerotrack_logistics_api_mcp.py"' in named.headers["content-disposition"]

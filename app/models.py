@@ -1,5 +1,6 @@
 """Pydantic models shared across the app."""
-from typing import Literal, Optional
+
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -21,7 +22,7 @@ class Endpoint(BaseModel):
 
 class IngestRequest(BaseModel):
     url: str
-    api_key: Optional[str] = None
+    api_key: str | None = None
     auth_header: str = "Authorization"
     auth_scheme: str = "Bearer"
 
@@ -52,13 +53,13 @@ class ToolCallTrace(BaseModel):
     tool: str
     method: str
     url: str
-    status: Optional[int] = None
+    status: int | None = None
     ok: bool = True
     summary: str = ""
-    count: Optional[int] = None
-    ms: Optional[int] = None
-    size: Optional[int] = None
-    preview: str = ""          # the first 2 KB of the response, for the call log
+    count: int | None = None
+    ms: int | None = None
+    size: int | None = None
+    preview: str = ""  # the first 2 KB of the response, for the call log
 
 
 class ChatResponse(BaseModel):

@@ -1,4 +1,5 @@
 """Browser smoke tests: the real pages in Chromium against the real server, no model calls."""
+
 import socket
 import subprocess
 import sys
@@ -17,8 +18,19 @@ def base_url():
         s.bind(("127.0.0.1", 0))
         port = s.getsockname()[1]
     server = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", str(port)],
-        cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        [
+            sys.executable,
+            "-m",
+            "uvicorn",
+            "app.main:app",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(port),
+        ],
+        cwd=ROOT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
     url = f"http://127.0.0.1:{port}"
     for _ in range(60):
@@ -41,5 +53,5 @@ def errors(page):
     seen = []
     page.on("console", lambda m: seen.append(m.text) if m.type == "error" else None)
     page.on("pageerror", lambda e: seen.append(str(e)))
-    page.emulate_media(reduced_motion="reduce")   # the replay renders its held frame at once
+    page.emulate_media(reduced_motion="reduce")  # the replay renders its held frame at once
     return seen

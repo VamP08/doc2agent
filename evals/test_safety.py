@@ -1,4 +1,5 @@
 """SSRF guard tests — offline."""
+
 import pytest
 
 from app.safety import TRUSTED_NETLOCS, UnsafeURLError, assert_public_url, trust_own_netloc

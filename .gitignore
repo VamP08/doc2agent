@@ -10,3 +10,4 @@ venv/
 /docs/
 
 PRODUCT.md
+.ruff_cache/

@@ -1,4 +1,5 @@
 """Router tests against a real large API's path list (DigitalOcean, 659 endpoints)."""
+
 import json
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -32,12 +33,12 @@ def fake_client(categories) -> MagicMock:
 @pytest.mark.parametrize(
     "path,expected",
     [
-        ("/v2/droplets", "droplets"),          # version prefix skipped
-        ("/api/v3/pets/{id}", "pets"),         # api + version both skipped
+        ("/v2/droplets", "droplets"),  # version prefix skipped
+        ("/api/v3/pets/{id}", "pets"),  # api + version both skipped
         ("/2026-01-01/messages", "messages"),  # dated version skipped
-        ("/rest/V2/orders", "orders"),         # case-insensitive
-        ("/pets", "pets"),                     # unprefixed path unaffected
-        ("/v2", "v2"),                         # nothing left: keep the segment
+        ("/rest/V2/orders", "orders"),  # case-insensitive
+        ("/pets", "pets"),  # unprefixed path unaffected
+        ("/v2", "v2"),  # nothing left: keep the segment
         ("/", "root"),
     ],
 )
@@ -62,9 +63,7 @@ def test_no_category_swallows_the_whole_api(digitalocean):
 def test_every_chosen_category_gets_tools(digitalocean):
     """gen-ai alone has 119 endpoints and would fill the budget on its own."""
     chosen = ["gen-ai", "droplets", "databases"]
-    selected, categories = select_endpoints(
-        "list my droplets", digitalocean, fake_client(chosen)
-    )
+    selected, categories = select_endpoints("list my droplets", digitalocean, fake_client(chosen))
     assert categories == chosen
     assert len(selected) == MAX_TOOLS
     represented = {category_of(e.path) for e in selected}
@@ -90,7 +89,15 @@ def test_hallucinated_category_is_ignored(digitalocean):
 def test_routing_event_names_the_tools_this_turn_exposes():
     from app.agent import routing_event
     from app.models import Endpoint
-    selected = [Endpoint(method="GET", path="/v2/droplets"), Endpoint(method="POST", path="/v2/volumes")]
+
+    selected = [
+        Endpoint(method="GET", path="/v2/droplets"),
+        Endpoint(method="POST", path="/v2/volumes"),
+    ]
     ev = routing_event(selected, ["droplets", "volumes"])
-    assert ev == {"type": "routing", "categories": ["droplets", "volumes"], "tool_count": 2,
-                  "tools": ["GET /v2/droplets", "POST /v2/volumes"]}
+    assert ev == {
+        "type": "routing",
+        "categories": ["droplets", "volumes"],
+        "tool_count": 2,
+        "tools": ["GET /v2/droplets", "POST /v2/volumes"],
+    }
