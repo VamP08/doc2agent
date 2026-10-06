@@ -18,6 +18,19 @@ Most tool-calling demos ship with tools someone wrote by hand. Here the tools do
 
 ![The call log: one live request with its status, time, size and the response it returned](assets/readme/call-log.png)
 
+<details>
+<summary>More screens</summary>
+
+| | |
+|---|---|
+| ![A write held for approval, with the arguments it will send](assets/screenshots/session-held.png) | ![A live answer after one real call](assets/screenshots/session-answer.png) |
+| ![Endpoints grouped by resource, writes marked for approval](assets/screenshots/endpoints.png) | ![Export as an MCP server, with the real generated file](assets/screenshots/export.png) |
+| ![Start screen with example APIs](assets/screenshots/start.png) | ![The AeroTrack live monitor](assets/screenshots/monitor.png) |
+
+![The held write on a phone](assets/screenshots/mobile-session.png)
+
+</details>
+
 Beyond the core loop:
 
 - Write operations (POST/PUT/PATCH/DELETE) pause the agent at an approval gate. The held write shows its method, resolved path and the arguments it will send, and one click opens the request exactly as it will go out, headers and JSON body included. You approve (Ctrl/Cmd+Enter), deny (optionally with a reason the agent is told), or turn on auto-approve for the session.
