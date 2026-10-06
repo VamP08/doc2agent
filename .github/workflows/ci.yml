@@ -21,6 +21,11 @@ jobs:
       - name: Offline tests (ingestion goldens, safety, demo API, units)
         run: pytest evals -q
 
+      - name: Browser smoke tests (every page in Chromium, no model calls)
+        run: |
+          python -m playwright install --with-deps chromium
+          pytest smoke -q
+
       - name: Live agent evals (skipped when GROQ_API_KEY secret is absent)
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
