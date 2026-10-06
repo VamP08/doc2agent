@@ -120,7 +120,7 @@ Note: docs sites that render via JavaScript can't be scraped. Use the API's spec
 ## Tests and evals
 
 ```bash
-pytest evals -q               # 74 offline tests, no API key needed
+pytest evals -q               # 75 offline tests, no API key needed
 pytest smoke -q               # 5 browser smoke tests in Chromium (python -m playwright install chromium first)
 python -m evals.agent_evals   # live tasks against a running server
 ```
