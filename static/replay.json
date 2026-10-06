@@ -1,6 +1,6 @@
 {
- "recorded_at": "2026-10-04T06:32:15Z",
- "model": "openai/gpt-oss-20b",
+ "recorded_at": "2026-10-06T18:27:05Z",
+ "model": "openai/gpt-oss-120b",
  "prompt": "Which warehouse has room for the most packages? Create a 5 kg express shipment from its city to Delhi.",
  "ingest": {
   "source": "openapi",
@@ -206,7 +206,7 @@
  "deny_reason": "Not today, Delhi intake is closed.",
  "prefix": [
   {
-   "t": 12891,
+   "t": 578,
    "ev": {
     "type": "tool_call",
     "tool": "get_warehouses_8",
@@ -216,7 +216,7 @@
    }
   },
   {
-   "t": 12969,
+   "t": 594,
    "ev": {
     "type": "tool_result",
     "trace": {
@@ -226,12 +226,15 @@
      "status": 200,
      "ok": true,
      "summary": "HTTP 200, 291 chars",
-     "count": 4
+     "count": 4,
+     "ms": 27,
+     "size": 291,
+     "preview": "{\"count\":4,\"warehouses\":[{\"id\":\"WH-1\",\"city\":\"Mumbai\",\"capacity\":500,\"packages_held\":285},{\"id\":\"WH-2\",\"city\":\"Delhi\",\"capacity\":500,\"packages_held\":197},{\"id\":\"WH-3\",\"city\":\"Bengaluru\",\"capacity\":500,\"packages_held\":322},{\"id\":\"WH-4\",\"city\":\"Hyderabad\",\"capacity\":500,\"packages_held\":144}]}"
     }
    }
   },
   {
-   "t": 16641,
+   "t": 1422,
    "ev": {
     "type": "tool_call",
     "tool": "post_shipments_1",
@@ -246,10 +249,10 @@
    }
   },
   {
-   "t": 16641,
+   "t": 1422,
    "ev": {
     "type": "approval_required",
-    "approval_id": "c5c397f9f422",
+    "approval_id": "e5d52afcdcab",
     "tool": "post_shipments_1",
     "method": "POST",
     "path": "/shipments",
@@ -265,7 +268,7 @@
  "branches": {
   "approve": [
    {
-    "t": 31,
+    "t": 16,
     "ev": {
      "type": "approval_result",
      "approved": true,
@@ -273,7 +276,7 @@
     }
    },
    {
-    "t": 62,
+    "t": 47,
     "ev": {
      "type": "tool_result",
      "trace": {
@@ -283,21 +286,24 @@
       "status": 201,
       "ok": true,
       "summary": "HTTP 201, 327 chars",
-      "count": 1
+      "count": 1,
+      "ms": 31,
+      "size": 327,
+      "preview": "{\"id\":\"SHP-1011\",\"status\":\"created\",\"origin_city\":\"Hyderabad\",\"dest_city\":\"Delhi\",\"weight_kg\":5.0,\"priority\":\"express\",\"courier_id\":null,\"eta_hours\":44,\"created_at\":\"2026-10-06T18:26:57+00:00\",\"updated_at\":\"2026-10-06T18:26:57+00:00\",\"events\":[{\"time\":\"2026-10-06T18:26:57+00:00\",\"status\":\"created\",\"note\":\"Created by agent\"}]}"
      }
     }
    },
    {
-    "t": 11906,
+    "t": 7203,
     "ev": {
      "type": "reply",
-     "text": "The warehouse with the greatest remaining capacity is **WH\u20114 (Hyderabad)** \u2013 it can still hold 356 more packages (500\u202fcapacity\u202f\u2013\u202f144\u202fpackages held).\n\nA 5\u202fkg express shipment has been created from Hyderabad to Delhi:\n\n- **Shipment ID:** `SHP-1018`\n- **Origin:** Hyderabad\n- **Destination:** Delhi\n- **Weight:** 5\u202fkg\n- **Priority:** express\n- **Status:** created\n\n(Endpoint used: `GET /warehouses` to determine capacity, then `POST /shipments` to create the shipment.)"
+     "text": "The warehouse with the most available space is **WH\u20114 in Hyderabad** (capacity\u202f500\u202f\u2013\u202f144\u202fheld\u202f=\u202f356 free slots). I created an express shipment of 5\u202fkg from Hyderabad to Delhi.\n\n**Created shipment:** `SHP-1011` (status\u202fcreated, priority\u202fexpress). This was done via the `POST /shipments` endpoint."
     }
    }
   ],
   "deny": [
    {
-    "t": 31,
+    "t": 47,
     "ev": {
      "type": "approval_result",
      "approved": false,
@@ -305,7 +311,7 @@
     }
    },
    {
-    "t": 31,
+    "t": 47,
     "ev": {
      "type": "tool_result",
      "trace": {
@@ -315,15 +321,18 @@
       "status": null,
       "ok": false,
       "summary": "\u270b denied \u2014 human approval not given",
-      "count": null
+      "count": null,
+      "ms": null,
+      "size": null,
+      "preview": ""
      }
     }
    },
    {
-    "t": 1860,
+    "t": 1250,
     "ev": {
      "type": "reply",
-     "text": "The warehouse with the most available space is **WH\u20114 in Hyderabad** (500\u202fcapacity \u2013 144\u202fheld\u202f=\u202f356 slots free).  \nI attempted to create a 5\u202fkg express shipment from Hyderabad to Delhi, but the request was **denied by the human operator** because Delhi intake is closed."
+     "text": "The **Hyderabad** warehouse (ID **WH\u20114**) has the most available space \u2013 it currently holds 144 of its 500\u2011package capacity, leaving **356 slots** free.\n\nI attempted to create a 5\u202fkg **express** shipment from Hyderabad to Delhi, but the request was **denied by the human operator** (the system returned \u201cNot today, Delhi intake is closed\u201d).  \n\n*Endpoints used*: `GET /warehouses` (to determine the warehouse with the most room) and `POST /shipments` (to create the shipment, which was denied)."
     }
    }
   ]
