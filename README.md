@@ -4,6 +4,8 @@ Point it at a REST API's documentation and it builds a working AI agent for that
 
 Live demo: **[doc2agent.onrender.com](https://doc2agent.onrender.com)** (free hosting, so the first load after idle takes about a minute). There's a built-in demo API to try it against, and a live monitor at [/monitor](https://doc2agent.onrender.com/monitor) where you can watch the agent's calls land among that API's own traffic.
 
+![The site's opening replay: the agent reads the warehouses, holds a write for approval, and on Approve creates the shipment](assets/readme/replay.gif)
+
 ## What it does
 
 Most tool-calling demos ship with tools someone wrote by hand. Here the tools don't exist until runtime:
@@ -11,6 +13,8 @@ Most tool-calling demos ship with tools someone wrote by hand. Here the tools do
 1. Give it a docs URL. If the URL serves an OpenAPI/Swagger spec, it's parsed directly with no LLM involved. If it's an HTML docs page, the text gets scraped and an LLM extracts the endpoints into a strict schema (validated, invalid entries dropped).
 2. Each endpoint becomes a tool-calling schema and a chat agent gets wired to them.
 3. Ask a question. The agent chains real HTTP calls, retries on errors, and every request appears in the UI with its status code.
+
+![The call log: one live request with its status, time, size and the response it returned](assets/readme/call-log.png)
 
 Beyond the core loop:
 
@@ -56,7 +60,7 @@ Note: docs sites that render via JavaScript can't be scraped. Use the API's spec
 ## Tests and evals
 
 ```bash
-pytest evals -q               # 71 offline tests, no API key needed
+pytest evals -q               # 73 offline tests, no API key needed
 python -m evals.agent_evals   # live tasks against a running server
 ```
 
