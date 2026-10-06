@@ -3,7 +3,9 @@ import asyncio
 import json
 import os
 import re
+import time
 import uuid
+from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import urlparse
@@ -13,7 +15,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException, Request  # noqa: E402
+from fastapi import Depends, FastAPI, HTTPException, Request  # noqa: E402
 from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
@@ -129,7 +131,28 @@ def api_ingest(req: IngestRequest, request: Request) -> IngestResponse:
     )
 
 
-@app.post("/api/chat", response_model=ChatResponse)
+# The live demo shares one free model budget; this keeps one visitor (or a bot) from spending it.
+QUESTION_LIMIT, QUESTION_WINDOW_S = 20, 600
+QUESTIONS: dict[str, deque] = defaultdict(deque)  # ponytail: per process; a shared store if it ever runs multi-worker
+
+
+def question_budget(request: Request) -> None:
+    ip = (request.headers.get("x-forwarded-for") or (request.client.host if request.client else "")).split(",")[0].strip()
+    now, asked = time.monotonic(), QUESTIONS[ip]
+    while asked and now - asked[0] > QUESTION_WINDOW_S:
+        asked.popleft()
+    if len(asked) >= QUESTION_LIMIT:
+        wait = int((QUESTION_WINDOW_S - (now - asked[0])) // 60) + 1
+        raise HTTPException(
+            status_code=429,
+            detail=f"This demo allows {QUESTION_LIMIT} questions per visitor every "
+                   f"{QUESTION_WINDOW_S // 60} minutes, so its shared model budget lasts. "
+                   f"Try again in {wait} minute{'' if wait == 1 else 's'}.",
+        )
+    asked.append(now)
+
+
+@app.post("/api/chat", response_model=ChatResponse, dependencies=[Depends(question_budget)])
 def api_chat(req: ChatRequest) -> ChatResponse:
     session = _get_session(req.session_id)
     session.auto_approve = req.auto_approve
@@ -141,7 +164,7 @@ def api_chat(req: ChatRequest) -> ChatResponse:
     return ChatResponse(reply=reply, trace=traces)
 
 
-@app.post("/api/chat/stream")
+@app.post("/api/chat/stream", dependencies=[Depends(question_budget)])
 def api_chat_stream(req: ChatRequest) -> StreamingResponse:
     session = _get_session(req.session_id)
     session.auto_approve = req.auto_approve
@@ -163,7 +186,7 @@ def api_chat_stream(req: ChatRequest) -> StreamingResponse:
     )
 
 
-@app.post("/api/chat/aside", response_model=ChatResponse)
+@app.post("/api/chat/aside", response_model=ChatResponse, dependencies=[Depends(question_budget)])
 def api_chat_aside(req: ChatRequest) -> ChatResponse:
     """A read-only side question, asked while a write is held.
 
