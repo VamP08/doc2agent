@@ -1,5 +1,7 @@
 # doc2agent
 
+[![CI](https://github.com/VamP08/doc2agent/actions/workflows/ci.yml/badge.svg)](https://github.com/VamP08/doc2agent/actions/workflows/ci.yml) [![MIT licence](https://img.shields.io/badge/licence-MIT-3b82f6)](LICENSE)
+
 Point it at a REST API's documentation and it builds a working AI agent for that API on the spot. The agent makes real HTTP calls, shows every request it makes, and asks before it writes anything.
 
 Live demo: **[doc2agent.onrender.com](https://doc2agent.onrender.com)** (free hosting, so the first load after idle takes about a minute). There's a built-in demo API to try it against, and a live monitor at [/monitor](https://doc2agent.onrender.com/monitor) where you can watch the agent's calls land among that API's own traffic.
@@ -26,6 +28,51 @@ Beyond the core loop:
 - Sessions persist in SQLite, so conversations survive restarts.
 - Any ingested API can be exported as a standalone MCP server file, usable from Claude Desktop or Cursor. The export covers the first 40 endpoints and has no approval gate of its own; the page that offers it says both.
 - SSRF protection: every hostname must resolve to a public IP or the request is refused.
+
+## How it works
+
+```mermaid
+flowchart LR
+  url[Docs URL] --> spec{OpenAPI spec?}
+  spec -- yes --> parse[Parsed directly<br/>no model]
+  spec -- HTML --> extract[Model extracts endpoints<br/>schema-validated]
+  parse --> tools[One tool per endpoint]
+  extract --> tools
+  tools -- over 40 --> router[Router picks resource<br/>groups per question]
+  tools --> agent[Agent loop<br/>model failover]
+  router --> agent
+  agent -- read --> http[Real HTTP call<br/>SSRF guard]
+  agent -- write --> gate[Approval gate<br/>held for a human]
+  gate -- approved --> http
+  gate -- denied, with reason --> agent
+  http --> agent
+  agent -- events over SSE --> ui[Console in the browser]
+  tools --> mcp[MCP server export]
+```
+
+## Why this instead of…
+
+- **Hand-written tools.** The usual tool-calling demo wires a model to functions someone wrote for one API. Here nothing exists until the docs are read, so the same app works against an API it has never seen.
+- **An OpenAPI-to-MCP generator.** If you already have a spec and only want an MCP server, a generator is the simpler tool, and doc2agent can export one too. What it adds is the run itself: the agent calling the API in front of you, every request visible, writes held for a person, large specs routed, and HTML docs handled when there is no spec at all.
+
+## Design decisions
+
+- **Parse first, model second.** An OpenAPI spec is parsed without a model, so the common case is deterministic and free. The model only sees docs that have no spec.
+- **Route by resource, round-robin.** A large spec is grouped by the first path segment that names a resource, a small model picks up to three groups per question, and tools are drawn from those groups in turn. Concatenating the groups instead let one 119-endpoint group take the whole 40-tool budget.
+- **The gate holds the thread.** A write waits on the server for a decision. A timeout counts as a denial, so an abandoned approval fails safe instead of running.
+- **The opening replay is recorded, not scripted.** `static/replay.json` is a real run captured by `scripts/capture_replay.py` and played back through the same renderer the live session uses, so the first screen shows the product's real output.
+- **Budgets are per model.** On the free tier each model has its own daily token budget, so a model that runs out is skipped until Groq says it has budget again, and a per-minute limit is waited out rather than failing the turn.
+
+## Known limitations
+
+- Docs rendered by JavaScript can't be read; use the spec URL. From HTML docs, only the first 42,000 characters are sent to the model.
+- Authentication is a single header (an API key or a bearer token). There are no OAuth flows.
+- At most 40 tools reach the model per question. Within a routed group, tools are taken in spec order, so a relevant endpoint far down a large group can be missed.
+- Each tool response is cut to 8,000 characters before the model sees it, and an answer is capped at 8 rounds of tool calls.
+- The live demo runs on Groq's free tier: when the main model's daily budget is spent, answers come from a smaller model, and each visitor can ask 20 questions every 10 minutes.
+- A held write waits up to 180 seconds for a decision, then counts as denied.
+- The MCP export covers the first 40 endpoints and has no approval gate of its own.
+- Sessions and the AeroTrack demo data reset on every redeploy. Rate limits and model cooldowns live in one process.
 
 ## The built-in demo
 
