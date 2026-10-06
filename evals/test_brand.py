@@ -26,3 +26,9 @@ def test_pages_link_the_icons():
 def test_pages_are_revalidated_after_a_deploy():
     for page in ("/", "/monitor"):
         assert client.get(page).headers["cache-control"] == "no-cache"
+
+
+def test_link_previews_have_an_image():
+    html = client.get("/").text
+    assert 'property="og:image" content="https://doc2agent.onrender.com/static/brand/og.png"' in html
+    assert client.get("/static/brand/og.png").status_code == 200
